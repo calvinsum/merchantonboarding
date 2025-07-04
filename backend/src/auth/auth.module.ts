@@ -25,7 +25,8 @@ import { SharedModule } from '../shared/shared.module';
     {
       provide: JwtStrategy,
       inject: [ConfigService, getRepositoryToken(User)],
-      useFactory: (configService: ConfigService, userRepository) => {
+      useFactory: (configService: ConfigService, userRepository: any) => {
+        // This factory ensures ConfigService is ready before JwtStrategy is created
         return new JwtStrategy(configService, userRepository);
       },
     },

@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthModule = void 0;
 const common_1 = require("@nestjs/common");
+const config_1 = require("@nestjs/config");
 const typeorm_1 = require("@nestjs/typeorm");
 const passport_1 = require("@nestjs/passport");
 const auth_controller_1 = require("./auth.controller");
@@ -29,7 +30,18 @@ exports.AuthModule = AuthModule = __decorate([
             shared_module_1.SharedModule,
         ],
         controllers: [auth_controller_1.AuthController],
-        providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy, jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard],
+        providers: [
+            auth_service_1.AuthService,
+            jwt_auth_guard_1.JwtAuthGuard,
+            roles_guard_1.RolesGuard,
+            {
+                provide: jwt_strategy_1.JwtStrategy,
+                inject: [config_1.ConfigService, (0, typeorm_1.getRepositoryToken)(user_entity_1.User)],
+                useFactory: (configService, userRepository) => {
+                    return new jwt_strategy_1.JwtStrategy(configService, userRepository);
+                },
+            },
+        ],
         exports: [auth_service_1.AuthService, jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard],
     })
 ], AuthModule);
