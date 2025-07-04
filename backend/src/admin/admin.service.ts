@@ -91,13 +91,22 @@ export class AdminService {
     // Create onboarding record
     const onboardingRecord = this.onboardingRepository.create({
       merchantId: savedMerchant.id,
-      onboardingType: preFillData.onboardingType,
-      hardwareDeliveryStatus: 'pending',
-      hardwareInstallationStatus: 'pending', 
-      trainingStatus: 'pending',
-      overallStatus: 'pending',
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      types: [preFillData.onboardingType],
+      status: 'pending',
+      progress: {
+        hardwareDelivery: {
+          status: 'pending',
+          slaDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        },
+        hardwareInstallation: {
+          status: 'pending', 
+          slaDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        },
+        training: {
+          status: 'pending',
+          slaDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+        },
+      },
     });
 
     const savedOnboardingRecord = await this.onboardingRepository.save(onboardingRecord);
@@ -117,7 +126,7 @@ export class AdminService {
     }
 
     // Generate secure token (30-day expiry)
-    const token = this.cryptoService.generateSecureToken(64);
+    const token = this.cryptoService.generateToken(64);
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30); // 30 days
 
