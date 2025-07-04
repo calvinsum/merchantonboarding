@@ -1,10 +1,10 @@
-import axios, { AxiosResponse } from 'axios';
+import axios, { type AxiosResponse } from 'axios';
 import { 
-  ApiResponse, 
-  OnboardingRecord, 
-  SchedulingRequest, 
-  OnboardingFunnelData,
-  AdminUser 
+  type ApiResponse, 
+  type OnboardingRecord, 
+  type SchedulingRequest, 
+  type OnboardingFunnelData,
+  type AdminUser 
 } from '../types';
 
 const API_BASE_URL = 'http://localhost:3001/api/v1';

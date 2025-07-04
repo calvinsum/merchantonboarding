@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { 
-  OnboardingRecord, 
-  AdminUser, 
-  Toast, 
-  OnboardingFunnelData,
-  SLABreach 
+  type OnboardingRecord, 
+  type AdminUser, 
+  type Toast, 
+  type OnboardingFunnelData,
+  type SLABreach 
 } from '../types';
 import { apiService } from '../services/api';
 

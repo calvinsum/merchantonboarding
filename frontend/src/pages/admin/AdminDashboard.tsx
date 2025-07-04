@@ -42,7 +42,6 @@ const AdminDashboard: React.FC = () => {
   const totalMerchants = onboardingRecords.length;
   const completedOnboarding = onboardingRecords.filter(record => record.completionPercentage === 100).length;
   const inProgress = onboardingRecords.filter(record => record.completionPercentage > 0 && record.completionPercentage < 100).length;
-  const notStarted = onboardingRecords.filter(record => record.completionPercentage === 0).length;
   const completionRate = totalMerchants > 0 ? (completedOnboarding / totalMerchants) * 100 : 0;
 
   const recentActivity = onboardingRecords

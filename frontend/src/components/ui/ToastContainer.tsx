@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, CheckCircle, XCircle, AlertCircle, Info } from 'lucide-react';
-import { Toast } from '../../types';
+import { type Toast } from '../../types';
 import { useUIStore } from '../../store';
 import { cn } from '../../utils';
 

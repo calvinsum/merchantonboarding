@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { 
-  Calendar, 
+ 
   Clock, 
   CheckCircle, 
   AlertCircle, 
@@ -180,7 +180,7 @@ const MerchantPortal: React.FC = () => {
         <h2 className="text-lg font-semibold text-gray-900 mb-6">Onboarding Steps</h2>
         
         <div className="space-y-6">
-          {steps.map((step, index) => {
+          {steps.map((step) => {
             const stepData = onboardingRecord.progress[step as keyof typeof onboardingRecord.progress];
             const Icon = getStepIcon(step);
             const isCompleted = stepData.status === 'completed';
@@ -242,8 +242,8 @@ const MerchantPortal: React.FC = () => {
         <div className="bg-blue-50 rounded-lg p-6">
           <h3 className="font-medium text-blue-900 mb-2">Next Steps</h3>
           <ul className="space-y-1">
-            {onboardingRecord.nextSteps.map((step, index) => (
-              <li key={index} className="text-sm text-blue-800">• {step}</li>
+            {onboardingRecord.nextSteps.map((step) => (
+              <li key={step} className="text-sm text-blue-800">• {step}</li>
             ))}
           </ul>
         </div>

@@ -5,45 +5,24 @@ import {
   MoreHorizontal, 
   Eye, 
   Edit, 
-  Calendar,
+
   CheckCircle,
   Clock,
   AlertTriangle
 } from 'lucide-react';
-import { useAdminStore, useUIStore } from '../../store';
+import { useAdminStore } from '../../store';
 import { formatDate, getStatusBadgeColor, formatPercentage } from '../../utils';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 
 const OnboardingRecords: React.FC = () => {
-  const { onboardingRecords, isLoading, fetchOnboardingRecords, updateOnboardingStatus } = useAdminStore();
-  const { addToast } = useUIStore();
+  const { onboardingRecords, isLoading, fetchOnboardingRecords } = useAdminStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     fetchOnboardingRecords();
   }, [fetchOnboardingRecords]);
 
-  const handleStatusUpdate = async (recordId: string, step: string, newStatus: string) => {
-    setIsUpdating(true);
-    try {
-      await updateOnboardingStatus(recordId, step, newStatus);
-      addToast({
-        type: 'success',
-        title: 'Status Updated',
-        message: `${step.replace('_', ' ')} status updated to ${newStatus}`,
-      });
-    } catch (error) {
-      addToast({
-        type: 'error',
-        title: 'Update Failed',
-        message: 'Failed to update status. Please try again.',
-      });
-    } finally {
-      setIsUpdating(false);
-    }
-  };
 
   const filteredRecords = onboardingRecords.filter(record => {
     const matchesSearch = record.merchant.accountName.toLowerCase().includes(searchTerm.toLowerCase()) ||
