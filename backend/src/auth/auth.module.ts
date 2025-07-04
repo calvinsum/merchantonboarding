@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigService } from '@nestjs/config';
+import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -17,7 +18,18 @@ import { SharedModule } from '../shared/shared.module';
     SharedModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard, RolesGuard],
+  providers: [
+    AuthService,
+    JwtAuthGuard,
+    RolesGuard,
+    {
+      provide: JwtStrategy,
+      inject: [ConfigService, getRepositoryToken(User)],
+      useFactory: (configService: ConfigService, userRepository) => {
+        return new JwtStrategy(configService, userRepository);
+      },
+    },
+  ],
   exports: [AuthService, JwtAuthGuard, RolesGuard],
 })
 export class AuthModule {}
