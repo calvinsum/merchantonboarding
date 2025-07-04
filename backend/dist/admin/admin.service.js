@@ -24,8 +24,10 @@ const training_type_entity_1 = require("../database/entities/training-type.entit
 const delivery_location_entity_1 = require("../database/entities/delivery-location.entity");
 const holiday_entity_1 = require("../database/entities/holiday.entity");
 const system_settings_entity_1 = require("../database/entities/system-settings.entity");
+const crypto_service_1 = require("../shared/services/crypto.service");
+const date_service_1 = require("../shared/services/date.service");
 let AdminService = class AdminService {
-    constructor(onboardingRepository, merchantRepository, trainerRepository, trainingSlotRepository, trainingTypeRepository, deliveryLocationRepository, holidayRepository, systemSettingsRepository) {
+    constructor(onboardingRepository, merchantRepository, trainerRepository, trainingSlotRepository, trainingTypeRepository, deliveryLocationRepository, holidayRepository, systemSettingsRepository, cryptoService, dateService) {
         this.onboardingRepository = onboardingRepository;
         this.merchantRepository = merchantRepository;
         this.trainerRepository = trainerRepository;
@@ -34,6 +36,8 @@ let AdminService = class AdminService {
         this.deliveryLocationRepository = deliveryLocationRepository;
         this.holidayRepository = holidayRepository;
         this.systemSettingsRepository = systemSettingsRepository;
+        this.cryptoService = cryptoService;
+        this.dateService = dateService;
     }
     async getAllOnboardingRecords() {
         return this.onboardingRepository.find({
@@ -54,6 +58,89 @@ let AdminService = class AdminService {
         await this.onboardingRepository.update(id, data);
         return this.getOnboardingById(id);
     }
+    async createMerchantFromPreFill(preFillData) {
+        const existingMerchant = await this.merchantRepository.findOne({
+            where: { email: preFillData.email },
+        });
+        if (existingMerchant) {
+            throw new common_1.BadRequestException('Merchant with this email already exists');
+        }
+        const merchant = this.merchantRepository.create({
+            accountName: preFillData.accountName,
+            email: preFillData.email,
+            phone: preFillData.phone,
+            picName: preFillData.picName,
+            segment: preFillData.segment,
+            preferredLanguage: preFillData.preferredLanguage || 'en',
+            businessLocation: preFillData.businessLocation,
+            notes: preFillData.notes,
+            status: 'active',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        });
+        const savedMerchant = await this.merchantRepository.save(merchant);
+        const onboardingRecord = this.onboardingRepository.create({
+            merchantId: savedMerchant.id,
+            types: [preFillData.onboardingType],
+            status: 'pending',
+            progress: {
+                hardwareDelivery: {
+                    status: 'pending',
+                    slaDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                },
+                hardwareInstallation: {
+                    status: 'pending',
+                    slaDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+                },
+                training: {
+                    status: 'pending',
+                    slaDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+                },
+            },
+        });
+        const savedOnboardingRecord = await this.onboardingRepository.save(onboardingRecord);
+        return this.generateMerchantLoginLink(savedMerchant.id);
+    }
+    async generateMerchantLoginLink(merchantId) {
+        const merchant = await this.merchantRepository.findOne({
+            where: { id: merchantId },
+        });
+        if (!merchant) {
+            throw new common_1.NotFoundException('Merchant not found');
+        }
+        const token = this.cryptoService.generateToken(64);
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 30);
+        await this.merchantRepository.update(merchantId, {
+            authToken: token,
+            authTokenExpiry: expiresAt,
+            updatedAt: new Date(),
+        });
+        const onboardingRecord = await this.onboardingRepository.findOne({
+            where: { merchantId },
+        });
+        const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        const loginLink = `${baseUrl}/merchant/onboarding?token=${token}`;
+        return {
+            loginLink,
+            token,
+            expiresAt,
+            merchantId,
+            onboardingId: onboardingRecord?.id || null,
+        };
+    }
+    async verifyMerchantToken(token) {
+        const merchant = await this.merchantRepository.findOne({
+            where: { authToken: token },
+        });
+        if (!merchant) {
+            return { valid: false };
+        }
+        if (merchant.authTokenExpiry && merchant.authTokenExpiry < new Date()) {
+            return { valid: false };
+        }
+        return { valid: true, merchantId: merchant.id };
+    }
 };
 exports.AdminService = AdminService;
 exports.AdminService = AdminService = __decorate([
@@ -73,6 +160,8 @@ exports.AdminService = AdminService = __decorate([
         typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
-        typeorm_2.Repository])
+        typeorm_2.Repository,
+        crypto_service_1.CryptoService,
+        date_service_1.DateService])
 ], AdminService);
 //# sourceMappingURL=admin.service.js.map

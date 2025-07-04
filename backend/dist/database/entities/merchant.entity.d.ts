@@ -22,6 +22,11 @@ export declare class Merchant {
     };
     preferredLanguage: string;
     expectedGoLiveDate: Date;
+    authToken: string;
+    authTokenExpiry: Date;
+    status: string;
+    businessLocation: string;
+    notes: string;
     createdAt: Date;
     updatedAt: Date;
     onboardingRecords: OnboardingRecord[];

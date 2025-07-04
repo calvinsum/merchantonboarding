@@ -9,8 +9,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
-const onboarding_controller_1 = require("./controllers/onboarding.controller");
 const admin_service_1 = require("./admin.service");
+const onboarding_controller_1 = require("./controllers/onboarding.controller");
+const pre_fill_controller_1 = require("./controllers/pre-fill.controller");
 const onboarding_record_entity_1 = require("../database/entities/onboarding-record.entity");
 const merchant_entity_1 = require("../database/entities/merchant.entity");
 const trainer_entity_1 = require("../database/entities/trainer.entity");
@@ -38,7 +39,7 @@ exports.AdminModule = AdminModule = __decorate([
             ]),
             shared_module_1.SharedModule,
         ],
-        controllers: [onboarding_controller_1.OnboardingController],
+        controllers: [onboarding_controller_1.OnboardingController, pre_fill_controller_1.PreFillController],
         providers: [admin_service_1.AdminService],
         exports: [admin_service_1.AdminService],
     })

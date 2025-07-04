@@ -43,11 +43,11 @@ __decorate([
     __metadata("design:type", String)
 ], Merchant.prototype, "segment", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'jsonb', name: 'delivery_address' }),
+    (0, typeorm_1.Column)({ type: 'jsonb', name: 'delivery_address', nullable: true }),
     __metadata("design:type", Object)
 ], Merchant.prototype, "deliveryAddress", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'jsonb', name: 'training_address' }),
+    (0, typeorm_1.Column)({ type: 'jsonb', name: 'training_address', nullable: true }),
     __metadata("design:type", Object)
 ], Merchant.prototype, "trainingAddress", void 0);
 __decorate([
@@ -55,13 +55,38 @@ __decorate([
         type: 'enum',
         enum: ['en', 'ms', 'zh', 'ta'],
         name: 'preferred_language',
+        default: 'en',
     }),
     __metadata("design:type", String)
 ], Merchant.prototype, "preferredLanguage", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'date', name: 'expected_go_live_date' }),
+    (0, typeorm_1.Column)({ type: 'date', name: 'expected_go_live_date', nullable: true }),
     __metadata("design:type", Date)
 ], Merchant.prototype, "expectedGoLiveDate", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'auth_token', nullable: true }),
+    __metadata("design:type", String)
+], Merchant.prototype, "authToken", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'auth_token_expiry', nullable: true }),
+    __metadata("design:type", Date)
+], Merchant.prototype, "authTokenExpiry", void 0);
+__decorate([
+    (0, typeorm_1.Column)({
+        type: 'enum',
+        enum: ['active', 'inactive', 'suspended'],
+        default: 'active'
+    }),
+    __metadata("design:type", String)
+], Merchant.prototype, "status", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'business_location', nullable: true }),
+    __metadata("design:type", String)
+], Merchant.prototype, "businessLocation", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
+    __metadata("design:type", String)
+], Merchant.prototype, "notes", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)({ name: 'created_at' }),
     __metadata("design:type", Date)
