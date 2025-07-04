@@ -24,16 +24,35 @@ import { SharedModule } from './shared/shared.module';
       envFilePath: ['.env.local', '.env'],
     }),
 
-    // Database - Using SQLite for development
+    // Database - Environment-aware configuration
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'sqlite',
-        database: 'database.sqlite',
-        autoLoadEntities: true,
-        synchronize: true, // Auto-create tables in development
-        logging: configService.get<boolean>('DB_LOGGING', false),
-      }),
+      useFactory: (configService: ConfigService) => {
+        const isProduction = configService.get<string>('NODE_ENV') === 'production';
+        
+        if (isProduction) {
+          // Production: Use PostgreSQL
+          return {
+            type: 'postgres',
+            url: configService.get<string>('DATABASE_URL'),
+            autoLoadEntities: true,
+            synchronize: false, // Never auto-sync in production
+            logging: configService.get<boolean>('DB_LOGGING', false),
+            ssl: {
+              rejectUnauthorized: false, // Required for most cloud PostgreSQL services
+            },
+          };
+        } else {
+          // Development: Use SQLite
+          return {
+            type: 'sqlite',
+            database: 'database.sqlite',
+            autoLoadEntities: true,
+            synchronize: true, // Auto-create tables in development
+            logging: configService.get<boolean>('DB_LOGGING', false),
+          };
+        }
+      },
     }),
 
     // Schedule module for cron jobs

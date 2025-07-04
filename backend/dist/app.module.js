@@ -32,13 +32,30 @@ exports.AppModule = AppModule = __decorate([
             }),
             typeorm_1.TypeOrmModule.forRootAsync({
                 inject: [config_1.ConfigService],
-                useFactory: (configService) => ({
-                    type: 'sqlite',
-                    database: 'database.sqlite',
-                    autoLoadEntities: true,
-                    synchronize: true,
-                    logging: configService.get('DB_LOGGING', false),
-                }),
+                useFactory: (configService) => {
+                    const isProduction = configService.get('NODE_ENV') === 'production';
+                    if (isProduction) {
+                        return {
+                            type: 'postgres',
+                            url: configService.get('DATABASE_URL'),
+                            autoLoadEntities: true,
+                            synchronize: false,
+                            logging: configService.get('DB_LOGGING', false),
+                            ssl: {
+                                rejectUnauthorized: false,
+                            },
+                        };
+                    }
+                    else {
+                        return {
+                            type: 'sqlite',
+                            database: 'database.sqlite',
+                            autoLoadEntities: true,
+                            synchronize: true,
+                            logging: configService.get('DB_LOGGING', false),
+                        };
+                    }
+                },
             }),
             schedule_1.ScheduleModule.forRoot(),
             jwt_1.JwtModule.registerAsync({
