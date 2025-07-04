@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StoreHub Onboarding - Phase 1a Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; background: #f5f5f5; }
+        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 40px; }
+        .phase-badge { background: #4facfe; color: white; padding: 5px 15px; border-radius: 15px; font-size: 14px; }
+        .feature-section { margin-bottom: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .btn { background: #4facfe; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; }
+        .btn:hover { background: #3a8bfd; }
+        .result-box { background: #e8f5e8; border: 1px solid #c3e6c3; padding: 15px; margin-top: 15px; border-radius: 5px; display: none; }
+        .result-box.error { background: #f8e8e8; border-color: #e6c3c3; }
+        .login-link { background: #2d3748; color: white; padding: 10px; margin-top: 10px; border-radius: 5px; font-family: monospace; word-break: break-all; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="phase-badge">Phase 1a Demo</div>
+            <h1>🚀 StoreHub Onboarding System</h1>
+            <p>Phase 1a: Core Authentication & Access Control</p>
+        </div>
+
+        <div class="feature-section">
+            <h3>📋 Pre-Fill Form & Merchant Creation</h3>
+            <p>Create new merchants from pre-fill forms and generate login links.</p>
+            
+            <form id="prefillForm">
+                <div class="form-group">
+                    <label>Account Name</label>
+                    <input type="text" id="accountName" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" id="phone" required>
+                </div>
+                <div class="form-group">
+                    <label>Person in Charge</label>
+                    <input type="text" id="picName" required>
+                </div>
+                <div class="form-group">
+                    <label>Business Segment</label>
+                    <select id="segment" required>
+                        <option value="">Select segment...</option>
+                        <option value="food_beverage">Food & Beverage</option>
+                        <option value="retail">Retail</option>
+                        <option value="services">Services</option>
+                        <option value="healthcare">Healthcare</option>
+                        <option value="education">Education</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Onboarding Type</label>
+                    <select id="onboardingType" required>
+                        <option value="">Select type...</option>
+                        <option value="full_onboarding">Full Onboarding</option>
+                        <option value="hardware_delivery">Hardware Delivery Only</option>
+                        <option value="installation_only">Installation Only</option>
+                        <option value="training_only">Training Only</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn">Create Merchant & Generate Login Link</button>
+            </form>
+            
+            <div id="prefillResult" class="result-box">
+                <h4>✅ Merchant Created Successfully!</h4>
+                <p><strong>Merchant ID:</strong> <span id="merchantId"></span></p>
+                <div class="login-link">
+                    <strong>Login Link:</strong><br>
+                    <span id="loginLink"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="feature-section">
+            <h3>🔗 Login Link Generation</h3>
+            <p>Generate new login links for existing merchants.</p>
+            
+            <div class="form-group">
+                <label>Merchant ID</label>
+                <input type="text" id="existingMerchantId" value="123e4567-e89b-12d3-a456-426614174001">
+            </div>
+            <button type="button" class="btn" onclick="generateLoginLink()">Generate Login Link</button>
+            
+            <div id="linkResult" class="result-box">
+                <h4>✅ Login Link Generated!</h4>
+                <div class="login-link">
+                    <span id="newLoginLink"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="feature-section">
+            <h3>🔐 Token Verification</h3>
+            <p>Verify merchant authentication tokens.</p>
+            
+            <div class="form-group">
+                <label>Token</label>
+                <input type="text" id="tokenToVerify" value="demo-token-123">
+            </div>
+            <button type="button" class="btn" onclick="verifyToken()">Verify Token</button>
+            
+            <div id="verifyResult" class="result-box">
+                <h4 id="verifyTitle">Token Status</h4>
+                <p id="verifyMessage"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001/api/v1';
+
+        // Mock API functions (since Phase 1a endpoints not yet implemented in quick-start.js)
+        document.getElementById('prefillForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Simulate API call
+            const merchantId = 'MOCK-' + Math.random().toString(36).substr(2, 9);
+            const token = Math.random().toString(36).substr(2, 15);
+            const loginLink = `http://localhost:3000/merchant/onboarding?token=${token}`;
+            
+            document.getElementById('merchantId').textContent = merchantId;
+            document.getElementById('loginLink').textContent = loginLink;
+            document.getElementById('prefillResult').style.display = 'block';
+        });
+
+        function generateLoginLink() {
+            // Simulate API call
+            const token = Math.random().toString(36).substr(2, 15);
+            const loginLink = `http://localhost:3000/merchant/onboarding?token=${token}`;
+            
+            document.getElementById('newLoginLink').textContent = loginLink;
+            document.getElementById('linkResult').style.display = 'block';
+        }
+
+        function verifyToken() {
+            const token = document.getElementById('tokenToVerify').value;
+            
+            if (token === 'demo-token-123') {
+                document.getElementById('verifyTitle').textContent = '✅ Token Valid';
+                document.getElementById('verifyMessage').textContent = 'Token is valid and not expired';
+                document.getElementById('verifyResult').className = 'result-box';
+            } else {
+                document.getElementById('verifyTitle').textContent = '❌ Token Invalid';
+                document.getElementById('verifyMessage').textContent = 'Token is invalid or expired';
+                document.getElementById('verifyResult').className = 'result-box error';
+            }
+            
+            document.getElementById('verifyResult').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

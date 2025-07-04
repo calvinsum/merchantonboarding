@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StoreHub Onboarding - Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        storehub: {
+                            primary: '#2563eb',
+                            secondary: '#64748b',
+                            accent: '#f59e0b',
+                            success: '#10b981',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-sm">SH</span>
+                        </div>
+                        <span class="ml-2 text-xl font-bold text-gray-900">StoreHub</span>
+                        <span class="ml-2 text-sm text-gray-500">Onboarding</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main content -->
+        <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Header -->
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Welcome, Demo Restaurant!</h1>
+                        <p class="text-gray-600 mt-1">Track your onboarding progress and schedule appointments</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-3xl font-bold text-blue-600" id="progress">0%</div>
+                        <div class="text-sm text-gray-600">Complete</div>
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="mt-6">
+                    <div class="flex justify-between text-sm text-gray-600 mb-2">
+                        <span>Progress</span>
+                        <span id="progress-text">0% Complete</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Your Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="flex items-center">
+                        <div class="w-5 h-5 text-gray-400 mr-3">📧</div>
+                        <div>
+                            <p class="text-sm text-gray-600">Email</p>
+                            <p class="font-medium" id="merchant-email">demo@restaurant.com</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-5 h-5 text-gray-400 mr-3">📞</div>
+                        <div>
+                            <p class="text-sm text-gray-600">Phone</p>
+                            <p class="font-medium" id="merchant-phone">+60123456789</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-5 h-5 text-gray-400 mr-3">📍</div>
+                        <div>
+                            <p class="text-sm text-gray-600">Segment</p>
+                            <p class="font-medium" id="merchant-segment">Food & Beverage</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onboarding Steps -->
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-6">Onboarding Steps</h2>
+                
+                <div class="space-y-6" id="onboarding-steps">
+                    <!-- Steps will be loaded here -->
+                </div>
+            </div>
+
+            <!-- API Test Section -->
+            <div class="bg-blue-50 rounded-lg p-6">
+                <h3 class="font-medium text-blue-900 mb-2">🔌 Backend API Status</h3>
+                <div class="space-y-2">
+                    <div>
+                        <span class="text-sm text-blue-800">Backend API:</span>
+                        <span id="api-status" class="text-sm font-medium">Checking...</span>
+                    </div>
+                    <div>
+                        <span class="text-sm text-blue-800">Last Updated:</span>
+                        <span id="last-updated" class="text-sm">Loading...</span>
+                    </div>
+                </div>
+                <button 
+                    onclick="loadData()" 
+                    class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                >
+                    🔄 Refresh Data
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function loadData() {
+            try {
+                document.getElementById('api-status').textContent = 'Loading...';
+                
+                const response = await fetch('http://localhost:3001/api/v1/merchant/progress');
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Update merchant info
+                    document.getElementById('merchant-email').textContent = data.data.merchant.email;
+                    document.getElementById('merchant-phone').textContent = data.data.merchant.phone;
+                    document.getElementById('merchant-segment').textContent = data.data.merchant.segment.replace('_', ' ');
+                    
+                    // Update progress
+                    const progress = data.data.completionPercentage;
+                    document.getElementById('progress').textContent = progress + '%';
+                    document.getElementById('progress-text').textContent = progress + '% Complete';
+                    document.getElementById('progress-bar').style.width = progress + '%';
+                    
+                    // Update steps
+                    const stepsContainer = document.getElementById('onboarding-steps');
+                    const steps = [
+                        { key: 'hardwareDelivery', title: 'Hardware Delivery', icon: '🚚' },
+                        { key: 'hardwareInstallation', title: 'Hardware Installation', icon: '🔧' },
+                        { key: 'training', title: 'Training Session', icon: '🎓' }
+                    ];
+                    
+                    stepsContainer.innerHTML = '';
+                    steps.forEach(step => {
+                        const stepData = data.data.progress[step.key];
+                        const statusColor = stepData.status === 'completed' ? 'text-green-600 bg-green-50' : 
+                                          stepData.status === 'scheduled' ? 'text-blue-600 bg-blue-50' : 
+                                          'text-gray-600 bg-gray-50';
+                        
+                        const stepElement = document.createElement('div');
+                        stepElement.className = 'flex items-start space-x-4';
+                        stepElement.innerHTML = `
+                            <div class="w-8 h-8 rounded-full border-2 ${stepData.status === 'completed' ? 'bg-green-500 border-green-500 text-white' : 'bg-white border-gray-300 text-gray-500'} flex items-center justify-center text-sm font-medium">
+                                ${stepData.status === 'completed' ? '✓' : step.icon}
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="font-medium text-gray-900">${step.title}</h3>
+                                        <p class="text-sm text-gray-600">Due: ${new Date(stepData.slaDate).toLocaleDateString()}</p>
+                                    </div>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">
+                                        ${stepData.status}
+                                    </span>
+                                </div>
+                            </div>
+                        `;
+                        stepsContainer.appendChild(stepElement);
+                    });
+                    
+                    document.getElementById('api-status').innerHTML = '🟢 Connected';
+                    document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+                } else {
+                    throw new Error('API returned error');
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('api-status').innerHTML = '🔴 Backend Not Connected';
+                document.getElementById('last-updated').textContent = 'Failed to load';
+            }
+        }
+        
+        // Load data when page loads
+        loadData();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadData, 30000);
+    </script>
+</body>
+</html>

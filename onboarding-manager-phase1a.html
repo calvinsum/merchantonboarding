@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StoreHub - Onboarding Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        storehub: {
+                            primary: '#2563eb',
+                            secondary: '#64748b',
+                            accent: '#f59e0b',
+                            success: '#10b981',
+                            warning: '#f59e0b',
+                            error: '#ef4444',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .status-pending { @apply bg-yellow-100 text-yellow-800 border-yellow-200; }
+        .status-scheduled { @apply bg-blue-100 text-blue-800 border-blue-200; }
+        .status-completed { @apply bg-green-100 text-green-800 border-green-200; }
+        .status-overdue { @apply bg-red-100 text-red-800 border-red-200; }
+        
+        .priority-high { @apply bg-red-50 border-l-4 border-red-500; }
+        .priority-medium { @apply bg-yellow-50 border-l-4 border-yellow-500; }
+        .priority-low { @apply bg-green-50 border-l-4 border-green-500; }
+        
+        .task-card {
+            transition: all 0.2s ease;
+        }
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, var(--tw-gradient-stops));
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 bg-storehub-primary rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">SH</span>
+                    </div>
+                    <span class="ml-2 text-xl font-bold text-gray-900">StoreHub</span>
+                    <span class="ml-2 text-sm text-gray-500">Onboarding Manager</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="refresh-btn" class="p-2 text-gray-600 hover:text-storehub-primary rounded-lg hover:bg-gray-100">
+                        <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+                    </button>
+                    <div class="text-sm text-gray-600">
+                        <span id="last-updated">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Dashboard Overview -->
+        <div class="mb-8">
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Onboarding Dashboard</h1>
+            <p class="text-gray-600">Manage and track all merchant onboarding processes</p>
+        </div>
+
+        <!-- Metrics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="metric-card from-blue-500 to-blue-600 bg-gradient-to-r rounded-lg p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-blue-100 text-sm">Active Onboardings</p>
+                        <p class="text-3xl font-bold" id="active-count">0</p>
+                    </div>
+                    <i data-lucide="users" class="w-8 h-8 text-blue-200"></i>
+                </div>
+            </div>
+            
+            <div class="metric-card from-green-500 to-green-600 bg-gradient-to-r rounded-lg p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-green-100 text-sm">Completed Today</p>
+                        <p class="text-3xl font-bold" id="completed-today">0</p>
+                    </div>
+                    <i data-lucide="check-circle" class="w-8 h-8 text-green-200"></i>
+                </div>
+            </div>
+            
+            <div class="metric-card from-red-500 to-red-600 bg-gradient-to-r rounded-lg p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-red-100 text-sm">Overdue Tasks</p>
+                        <p class="text-3xl font-bold" id="overdue-count">0</p>
+                    </div>
+                    <i data-lucide="alert-triangle" class="w-8 h-8 text-red-200"></i>
+                </div>
+            </div>
+            
+            <div class="metric-card from-purple-500 to-purple-600 bg-gradient-to-r rounded-lg p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-purple-100 text-sm">Completion Rate</p>
+                        <p class="text-3xl font-bold" id="completion-rate">0%</p>
+                    </div>
+                    <i data-lucide="trending-up" class="w-8 h-8 text-purple-200"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <button onclick="openNewMerchantModal()" class="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <i data-lucide="plus" class="w-6 h-6 text-storehub-primary mb-2"></i>
+                    <span class="text-sm font-medium">New Merchant</span>
+                </button>
+                <button onclick="openScheduleModal()" class="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <i data-lucide="calendar" class="w-6 h-6 text-storehub-primary mb-2"></i>
+                    <span class="text-sm font-medium">Schedule</span>
+                </button>
+                <button onclick="openReminderModal()" class="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <i data-lucide="mail" class="w-6 h-6 text-storehub-primary mb-2"></i>
+                    <span class="text-sm font-medium">Send Reminder</span>
+                </button>
+                <button onclick="exportReport()" class="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <i data-lucide="file-text" class="w-6 h-6 text-storehub-primary mb-2"></i>
+                    <span class="text-sm font-medium">Export Report</span>
+                </button>
+                <button onclick="openSettingsModal()" class="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <i data-lucide="settings" class="w-6 h-6 text-storehub-primary mb-2"></i>
+                    <span class="text-sm font-medium">Settings</span>
+                </button>
+                <button onclick="openHelpModal()" class="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <i data-lucide="help-circle" class="w-6 h-6 text-storehub-primary mb-2"></i>
+                    <span class="text-sm font-medium">Help</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Active Tasks -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-sm">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-gray-900">Active Onboarding Tasks</h3>
+                            <div class="flex items-center space-x-2">
+                                <select id="status-filter" class="text-sm border border-gray-300 rounded-md px-3 py-1">
+                                    <option value="all">All Statuses</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="scheduled">Scheduled</option>
+                                    <option value="overdue">Overdue</option>
+                                </select>
+                                <select id="step-filter" class="text-sm border border-gray-300 rounded-md px-3 py-1">
+                                    <option value="all">All Steps</option>
+                                    <option value="hardwareDelivery">Hardware Delivery</option>
+                                    <option value="hardwareInstallation">Hardware Installation</option>
+                                    <option value="training">Training</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tasks-container" class="p-6">
+                        <!-- Tasks will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <!-- Priority Alerts -->
+                <div class="bg-white rounded-lg shadow-sm">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">Priority Alerts</h3>
+                    </div>
+                    <div id="alerts-container" class="p-6">
+                        <!-- Alerts will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="bg-white rounded-lg shadow-sm">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">Recent Activity</h3>
+                    </div>
+                    <div id="activity-container" class="p-6">
+                        <!-- Activity will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Team Performance -->
+                <div class="bg-white rounded-lg shadow-sm">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">Team Performance</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Delivery Team</span>
+                                <span class="text-sm font-medium text-green-600">95% On-time</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Installation Team</span>
+                                <span class="text-sm font-medium text-yellow-600">87% On-time</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Training Team</span>
+                                <span class="text-sm font-medium text-green-600">92% On-time</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Detail Modal -->
+    <div id="task-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900" id="modal-title">Task Details</h3>
+                        <button id="close-modal" class="p-2 hover:bg-gray-100 rounded-lg">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="modal-content" class="p-6">
+                    <!-- Modal content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Merchant Modal -->
+    <div id="new-merchant-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900">Add New Merchant</h3>
+                        <button onclick="closeModal('new-merchant-modal')" class="p-2 hover:bg-gray-100 rounded-lg">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <form id="new-merchant-form" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Business Name *</label>
+                                <input type="text" id="business-name" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Contact Person *</label>
+                                <input type="text" id="contact-person" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                                <input type="email" id="merchant-email" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
+                                <input type="tel" id="merchant-phone" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Business Segment *</label>
+                                <select id="business-segment" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                                    <option value="">Select Segment</option>
+                                    <option value="food_beverage">Food & Beverage</option>
+                                    <option value="retail">Retail</option>
+                                    <option value="services">Services</option>
+                                    <option value="beauty">Beauty & Wellness</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Priority Level</label>
+                                <select id="priority-level" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                                    <option value="standard">Standard</option>
+                                    <option value="high">High Priority</option>
+                                    <option value="urgent">Urgent</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                            <textarea id="merchant-address" rows="3" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary" placeholder="Full business address"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Special Requirements</label>
+                            <textarea id="special-requirements" rows="3" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary" placeholder="Any special installation or training requirements"></textarea>
+                        </div>
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" onclick="closeModal('new-merchant-modal')" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+                            <button type="submit" class="px-4 py-2 bg-storehub-primary text-white rounded-md hover:bg-blue-700">Create Merchant</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Modal -->
+    <div id="schedule-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900">Schedule Appointment</h3>
+                        <button onclick="closeModal('schedule-modal')" class="p-2 hover:bg-gray-100 rounded-lg">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <form id="schedule-form" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Merchant *</label>
+                                <select id="schedule-merchant" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                                    <option value="">Select Merchant</option>
+                                    <!-- Will be populated dynamically -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Service Type *</label>
+                                <select id="service-type" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                                    <option value="">Select Service</option>
+                                    <option value="hardwareDelivery">Hardware Delivery</option>
+                                    <option value="hardwareInstallation">Hardware Installation</option>
+                                    <option value="training">Training Session</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+                                <input type="date" id="schedule-date" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Time *</label>
+                                <input type="time" id="schedule-time" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Duration (hours)</label>
+                                <select id="schedule-duration" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                                    <option value="1">1 hour</option>
+                                    <option value="2">2 hours</option>
+                                    <option value="3">3 hours</option>
+                                    <option value="4">4 hours</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
+                                <select id="assigned-to" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                                    <option value="">Auto-assign</option>
+                                    <!-- Will be populated dynamically -->
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                            <textarea id="schedule-notes" rows="3" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary" placeholder="Special instructions or notes"></textarea>
+                        </div>
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" onclick="closeModal('schedule-modal')" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+                            <button type="submit" class="px-4 py-2 bg-storehub-primary text-white rounded-md hover:bg-blue-700">Schedule Appointment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reminder Modal -->
+    <div id="reminder-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900">Send Reminder</h3>
+                        <button onclick="closeModal('reminder-modal')" class="p-2 hover:bg-gray-100 rounded-lg">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <form id="reminder-form" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Reminder Type *</label>
+                                <select id="reminder-type" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                                    <option value="">Select Type</option>
+                                    <option value="appointment">Appointment Reminder</option>
+                                    <option value="overdue">Overdue Task</option>
+                                    <option value="follow-up">Follow-up</option>
+                                    <option value="completion">Completion Status</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Send Method *</label>
+                                <select id="send-method" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                                    <option value="">Select Method</option>
+                                    <option value="email">Email</option>
+                                    <option value="sms">SMS</option>
+                                    <option value="both">Email & SMS</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Recipients</label>
+                            <div class="space-y-2">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="select-all-merchants" class="h-4 w-4 text-storehub-primary focus:ring-storehub-primary border-gray-300 rounded">
+                                    <label for="select-all-merchants" class="ml-2 text-sm text-gray-700">Select All Merchants</label>
+                                </div>
+                                <div id="merchant-list" class="max-h-48 overflow-y-auto border border-gray-200 rounded-md p-3">
+                                    <!-- Will be populated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Message Template</label>
+                            <select id="message-template" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary mb-2">
+                                <option value="">Select Template</option>
+                                <option value="appointment-reminder">Appointment Reminder</option>
+                                <option value="overdue-task">Overdue Task</option>
+                                <option value="welcome">Welcome Message</option>
+                                <option value="completion">Completion Follow-up</option>
+                            </select>
+                            <textarea id="reminder-message" rows="4" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary" placeholder="Enter your message here..."></textarea>
+                        </div>
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" onclick="closeModal('reminder-modal')" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+                            <button type="submit" class="px-4 py-2 bg-storehub-primary text-white rounded-md hover:bg-blue-700">Send Reminder</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900">System Settings</h3>
+                        <button onclick="closeModal('settings-modal')" class="p-2 hover:bg-gray-100 rounded-lg">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-8">
+                        <!-- SLA Settings -->
+                        <div>
+                            <h4 class="text-md font-semibold text-gray-900 mb-4">SLA Settings</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Hardware Delivery SLA (days)</label>
+                                    <input type="number" id="delivery-sla" value="3" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Installation SLA (days)</label>
+                                    <input type="number" id="installation-sla" value="7" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Training SLA (days)</label>
+                                    <input type="number" id="training-sla" value="14" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notification Settings -->
+                        <div>
+                            <h4 class="text-md font-semibold text-gray-900 mb-4">Notification Settings</h4>
+                            <div class="space-y-4">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="email-notifications" checked class="h-4 w-4 text-storehub-primary focus:ring-storehub-primary border-gray-300 rounded">
+                                    <label for="email-notifications" class="ml-2 text-sm text-gray-700">Enable Email Notifications</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="sms-notifications" checked class="h-4 w-4 text-storehub-primary focus:ring-storehub-primary border-gray-300 rounded">
+                                    <label for="sms-notifications" class="ml-2 text-sm text-gray-700">Enable SMS Notifications</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="auto-reminders" checked class="h-4 w-4 text-storehub-primary focus:ring-storehub-primary border-gray-300 rounded">
+                                    <label for="auto-reminders" class="ml-2 text-sm text-gray-700">Auto-send Reminders</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Team Settings -->
+                        <div>
+                            <h4 class="text-md font-semibold text-gray-900 mb-4">Team Settings</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Default Working Hours</label>
+                                    <div class="flex space-x-2">
+                                        <input type="time" id="work-start" value="09:00" class="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                                        <input type="time" id="work-end" value="17:00" class="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Max Daily Appointments</label>
+                                    <input type="number" id="max-appointments" value="8" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Data Management -->
+                        <div>
+                            <h4 class="text-md font-semibold text-gray-900 mb-4">Data Management</h4>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-700">Auto-archive completed records after:</span>
+                                    <select id="auto-archive" class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                                        <option value="30">30 days</option>
+                                        <option value="60">60 days</option>
+                                        <option value="90" selected>90 days</option>
+                                        <option value="180">180 days</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-700">Data refresh interval:</span>
+                                    <select id="refresh-interval" class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-storehub-primary">
+                                        <option value="60">1 minute</option>
+                                        <option value="120" selected>2 minutes</option>
+                                        <option value="300">5 minutes</option>
+                                        <option value="600">10 minutes</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3 mt-8">
+                        <button type="button" onclick="closeModal('settings-modal')" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+                        <button type="button" onclick="saveSettings()" class="px-4 py-2 bg-storehub-primary text-white rounded-md hover:bg-blue-700">Save Settings</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900">Help & Documentation</h3>
+                        <button onclick="closeModal('help-modal')" class="p-2 hover:bg-gray-100 rounded-lg">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-8">
+                        <!-- Quick Start Guide -->
+                        <div>
+                            <h4 class="text-md font-semibold text-gray-900 mb-4">Quick Start Guide</h4>
+                            <div class="space-y-4">
+                                <div class="p-4 bg-blue-50 rounded-lg">
+                                    <h5 class="font-medium text-blue-900 mb-2">1. Adding New Merchants</h5>
+                                    <p class="text-sm text-blue-800">Click "New Merchant" to add merchants to the onboarding process. Fill in all required fields and select appropriate priority level.</p>
+                                </div>
+                                <div class="p-4 bg-green-50 rounded-lg">
+                                    <h5 class="font-medium text-green-900 mb-2">2. Managing Tasks</h5>
+                                    <p class="text-sm text-green-800">Use filters to view specific tasks. Click on any task to view details, update status, or add notes.</p>
+                                </div>
+                                <div class="p-4 bg-yellow-50 rounded-lg">
+                                    <h5 class="font-medium text-yellow-900 mb-2">3. Scheduling Appointments</h5>
+                                    <p class="text-sm text-yellow-800">Use the Schedule button to book delivery, installation, or training appointments. The system will auto-assign team members based on availability.</p>
+                                </div>
+                                <div class="p-4 bg-purple-50 rounded-lg">
+                                    <h5 class="font-medium text-purple-900 mb-2">4. Sending Reminders</h5>
+                                    <p class="text-sm text-purple-800">Send automated reminders to merchants via email or SMS. Use templates or customize your message.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feature Overview -->
+                        <div>
+                            <h4 class="text-md font-semibold text-gray-900 mb-4">Feature Overview</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="p-4 border border-gray-200 rounded-lg">
+                                    <div class="flex items-center mb-2">
+                                        <i data-lucide="bar-chart" class="w-5 h-5 text-storehub-primary mr-2"></i>
+                                        <h5 class="font-medium text-gray-900">Dashboard Metrics</h5>
+                                    </div>
+                                    <p class="text-sm text-gray-600">Real-time tracking of active onboardings, completion rates, and performance metrics.</p>
+                                </div>
+                                <div class="p-4 border border-gray-200 rounded-lg">
+                                    <div class="flex items-center mb-2">
+                                        <i data-lucide="filter" class="w-5 h-5 text-storehub-primary mr-2"></i>
+                                        <h5 class="font-medium text-gray-900">Advanced Filtering</h5>
+                                    </div>
+                                    <p class="text-sm text-gray-600">Filter tasks by status, step type, priority, or date range to focus on what matters most.</p>
+                                </div>
+                                <div class="p-4 border border-gray-200 rounded-lg">
+                                    <div class="flex items-center mb-2">
+                                        <i data-lucide="bell" class="w-5 h-5 text-storehub-primary mr-2"></i>
+                                        <h5 class="font-medium text-gray-900">Smart Alerts</h5>
+                                    </div>
+                                    <p class="text-sm text-gray-600">Automatic notifications for overdue tasks, upcoming deadlines, and performance issues.</p>
+                                </div>
+                                <div class="p-4 border border-gray-200 rounded-lg">
+                                    <div class="flex items-center mb-2">
+                                        <i data-lucide="calendar-check" class="w-5 h-5 text-storehub-primary mr-2"></i>
+                                        <h5 class="font-medium text-gray-900">Scheduling System</h5>
+                                    </div>
+                                    <p class="text-sm text-gray-600">Intelligent scheduling with team availability, workload balancing, and SLA compliance.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Troubleshooting -->
+                        <div>
+                            <h4 class="text-md font-semibold text-gray-900 mb-4">Troubleshooting</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <h5 class="font-medium text-gray-900 mb-1">Q: Data not refreshing?</h5>
+                                    <p class="text-sm text-gray-600">A: Check your internet connection and click the refresh button. If issues persist, contact IT support.</p>
+                                </div>
+                                <div>
+                                    <h5 class="font-medium text-gray-900 mb-1">Q: Can't schedule appointments?</h5>
+                                    <p class="text-sm text-gray-600">A: Ensure the selected date is a working day and team members are available. Check holiday calendar settings.</p>
+                                </div>
+                                <div>
+                                    <h5 class="font-medium text-gray-900 mb-1">Q: Notifications not being sent?</h5>
+                                    <p class="text-sm text-gray-600">A: Verify notification settings are enabled and recipient contact information is correct.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Support -->
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <h4 class="text-md font-semibold text-gray-900 mb-2">Need More Help?</h4>
+                            <p class="text-sm text-gray-600 mb-4">Our support team is here to help you make the most of the Onboarding Manager.</p>
+                            <div class="flex space-x-4">
+                                <button class="px-4 py-2 bg-storehub-primary text-white rounded-md hover:bg-blue-700">
+                                    <i data-lucide="mail" class="w-4 h-4 inline mr-2"></i>Contact Support
+                                </button>
+                                <button class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
+                                    <i data-lucide="book-open" class="w-4 h-4 inline mr-2"></i>View Documentation
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Global data storage
+        let merchantsData = [];
+        let funnelData = null;
+
+        // API base URL
+        const API_BASE = 'http://localhost:3001/api/v1';
+
+        // DOM elements
+        const tasksContainer = document.getElementById('tasks-container');
+        const alertsContainer = document.getElementById('alerts-container');
+        const activityContainer = document.getElementById('activity-container');
+        const taskModal = document.getElementById('task-modal');
+        const statusFilter = document.getElementById('status-filter');
+        const stepFilter = document.getElementById('step-filter');
+
+        // Load data function
+        async function loadData() {
+            try {
+                document.getElementById('last-updated').textContent = 'Loading...';
+                
+                // Load merchant progress and funnel data
+                const [progressResponse, funnelResponse] = await Promise.all([
+                    fetch(`${API_BASE}/merchant/progress`),
+                    fetch(`${API_BASE}/reports/onboarding-funnel`)
+                ]);
+                
+                const progressData = await progressResponse.json();
+                const funnelDataResponse = await funnelResponse.json();
+                
+                if (progressData.success) {
+                    // For demo, we'll simulate multiple merchants
+                    merchantsData = generateMockMerchants(progressData.data);
+                    funnelData = funnelDataResponse.data;
+                    
+                    updateMetrics();
+                    renderTasks();
+                    renderAlerts();
+                    renderActivity();
+                    
+                    document.getElementById('last-updated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+                } else {
+                    throw new Error('Failed to load data');
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('last-updated').textContent = 'Error loading data';
+            }
+        }
+
+        // Generate mock merchants for demo
+        function generateMockMerchants(baseData) {
+            const merchants = [];
+            const segments = ['food_beverage', 'retail', 'services', 'beauty'];
+            const statuses = ['pending', 'scheduled', 'completed'];
+            
+            for (let i = 0; i < 12; i++) {
+                const merchant = {
+                    ...baseData,
+                    id: `merchant-${i}`,
+                    merchant: {
+                        ...baseData.merchant,
+                        id: `merchant-${i}`,
+                        accountName: `Demo Business ${i + 1}`,
+                        email: `demo${i + 1}@business.com`,
+                        segment: segments[Math.floor(Math.random() * segments.length)]
+                    },
+                    progress: {
+                        hardwareDelivery: {
+                            ...baseData.progress.hardwareDelivery,
+                            status: statuses[Math.floor(Math.random() * statuses.length)]
+                        },
+                        hardwareInstallation: {
+                            ...baseData.progress.hardwareInstallation,
+                            status: statuses[Math.floor(Math.random() * statuses.length)]
+                        },
+                        training: {
+                            ...baseData.progress.training,
+                            status: statuses[Math.floor(Math.random() * statuses.length)]
+                        }
+                    },
+                    completionPercentage: Math.floor(Math.random() * 101),
+                    updatedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString()
+                };
+                merchants.push(merchant);
+            }
+            return merchants;
+        }
+
+        // Update metrics
+        function updateMetrics() {
+            const activeCount = merchantsData.filter(m => m.completionPercentage < 100).length;
+            const completedToday = merchantsData.filter(m => {
+                const today = new Date().toDateString();
+                return m.completionPercentage === 100 && new Date(m.updatedAt).toDateString() === today;
+            }).length;
+            
+            const overdueTasks = merchantsData.reduce((count, merchant) => {
+                Object.values(merchant.progress).forEach(step => {
+                    if (step.status !== 'completed' && new Date(step.slaDate) < new Date()) {
+                        count++;
+                    }
+                });
+                return count;
+            }, 0);
+            
+            const completionRate = Math.round((merchantsData.filter(m => m.completionPercentage === 100).length / merchantsData.length) * 100);
+            
+            document.getElementById('active-count').textContent = activeCount;
+            document.getElementById('completed-today').textContent = completedToday;
+            document.getElementById('overdue-count').textContent = overdueTasks;
+            document.getElementById('completion-rate').textContent = `${completionRate}%`;
+        }
+
+        // Render tasks
+        function renderTasks() {
+            const tasks = [];
+            
+            merchantsData.forEach(merchant => {
+                Object.entries(merchant.progress).forEach(([stepKey, stepData]) => {
+                    if (stepData.status !== 'completed') {
+                        const isOverdue = new Date(stepData.slaDate) < new Date();
+                        const priority = isOverdue ? 'high' : 
+                                       stepData.status === 'scheduled' ? 'medium' : 'low';
+                        
+                        tasks.push({
+                            id: `${merchant.id}-${stepKey}`,
+                            merchantId: merchant.id,
+                            merchantName: merchant.merchant.accountName,
+                            step: stepKey,
+                            stepTitle: getStepTitle(stepKey),
+                            status: isOverdue ? 'overdue' : stepData.status,
+                            slaDate: stepData.slaDate,
+                            priority,
+                            segment: merchant.merchant.segment,
+                            email: merchant.merchant.email,
+                            phone: merchant.merchant.phone
+                        });
+                    }
+                });
+            });
+            
+            // Filter tasks
+            const statusFilterValue = statusFilter.value;
+            const stepFilterValue = stepFilter.value;
+            
+            const filteredTasks = tasks.filter(task => {
+                return (statusFilterValue === 'all' || task.status === statusFilterValue) &&
+                       (stepFilterValue === 'all' || task.step === stepFilterValue);
+            });
+            
+            // Sort by priority and due date
+            filteredTasks.sort((a, b) => {
+                const priorityOrder = { high: 3, medium: 2, low: 1 };
+                if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
+                    return priorityOrder[b.priority] - priorityOrder[a.priority];
+                }
+                return new Date(a.slaDate) - new Date(b.slaDate);
+            });
+            
+            tasksContainer.innerHTML = filteredTasks.map(task => `
+                <div class="task-card p-4 border border-gray-200 rounded-lg mb-4 cursor-pointer priority-${task.priority}" 
+                     onclick="openTaskModal('${task.id}')">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="font-medium text-gray-900">${task.merchantName}</h4>
+                        <span class="px-2 py-1 text-xs font-medium rounded-full status-${task.status}">
+                            ${task.status.toUpperCase()}
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm text-gray-600">
+                        <span>${task.stepTitle}</span>
+                        <span>Due: ${formatDate(task.slaDate)}</span>
+                    </div>
+                    <div class="mt-2 flex items-center space-x-4 text-xs text-gray-500">
+                        <span>${task.segment.replace('_', ' ')}</span>
+                        <span>${task.email}</span>
+                    </div>
+                </div>
+            `).join('');
+            
+            if (filteredTasks.length === 0) {
+                tasksContainer.innerHTML = '<p class="text-gray-500 text-center py-8">No tasks match your filters</p>';
+            }
+        }
+
+        // Render alerts
+        function renderAlerts() {
+            const alerts = [
+                { type: 'warning', message: '3 merchants have pending hardware deliveries for tomorrow' },
+                { type: 'error', message: '2 installations are overdue' },
+                { type: 'info', message: '5 training sessions scheduled for next week' }
+            ];
+            
+            alertsContainer.innerHTML = alerts.map(alert => `
+                <div class="p-3 border-l-4 border-${alert.type === 'error' ? 'red' : alert.type === 'warning' ? 'yellow' : 'blue'}-500 bg-${alert.type === 'error' ? 'red' : alert.type === 'warning' ? 'yellow' : 'blue'}-50 mb-3">
+                    <p class="text-sm text-${alert.type === 'error' ? 'red' : alert.type === 'warning' ? 'yellow' : 'blue'}-800">${alert.message}</p>
+                </div>
+            `).join('');
+        }
+
+        // Render activity
+        function renderActivity() {
+            const activities = merchantsData.slice(0, 5).map(merchant => ({
+                action: `Updated ${merchant.merchant.accountName}`,
+                time: formatRelativeTime(merchant.updatedAt),
+                type: 'update'
+            }));
+            
+            activityContainer.innerHTML = activities.map(activity => `
+                <div class="flex items-center space-x-3 mb-3">
+                    <div class="w-2 h-2 bg-storehub-primary rounded-full"></div>
+                    <div>
+                        <p class="text-sm text-gray-900">${activity.action}</p>
+                        <p class="text-xs text-gray-500">${activity.time}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Open task modal
+        function openTaskModal(taskId) {
+            const [merchantId, stepKey] = taskId.split('-').slice(0, 2);
+            const merchant = merchantsData.find(m => m.id === merchantId);
+            const step = merchant.progress[stepKey];
+            
+            document.getElementById('modal-title').textContent = `${getStepTitle(stepKey)} - ${merchant.merchant.accountName}`;
+            
+            document.getElementById('modal-content').innerHTML = `
+                <div class="space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <select id="task-status" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                                <option value="pending" ${step.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                <option value="scheduled" ${step.status === 'scheduled' ? 'selected' : ''}>Scheduled</option>
+                                <option value="completed" ${step.status === 'completed' ? 'selected' : ''}>Completed</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                            <input type="date" id="task-due-date" value="${step.slaDate.split('T')[0]}" 
+                                   class="w-full border border-gray-300 rounded-md px-3 py-2">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                        <textarea id="task-notes" rows="3" 
+                                  class="w-full border border-gray-300 rounded-md px-3 py-2"
+                                  placeholder="Add notes...">${step.notes || ''}</textarea>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-medium text-gray-900 mb-2">Merchant Information</h4>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="text-gray-600">Email:</span>
+                                <span class="ml-2">${merchant.merchant.email}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Phone:</span>
+                                <span class="ml-2">${merchant.merchant.phone}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Segment:</span>
+                                <span class="ml-2">${merchant.merchant.segment.replace('_', ' ')}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Progress:</span>
+                                <span class="ml-2">${merchant.completionPercentage}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <div class="space-x-2">
+                            <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                                <i data-lucide="mail" class="w-4 h-4 inline mr-2"></i>Send Email
+                            </button>
+                            <button class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                                <i data-lucide="phone" class="w-4 h-4 inline mr-2"></i>Call
+                            </button>
+                        </div>
+                        <div class="space-x-2">
+                            <button id="cancel-task" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
+                                Cancel
+                            </button>
+                            <button id="save-task" class="px-4 py-2 bg-storehub-primary text-white rounded-md hover:bg-blue-700">
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            taskModal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        // Close task modal (original function)
+        function closeTaskModal() {
+            taskModal.classList.add('hidden');
+        }
+
+        // Utility functions
+        function getStepTitle(step) {
+            const titles = {
+                hardwareDelivery: 'Hardware Delivery',
+                hardwareInstallation: 'Hardware Installation',
+                training: 'Training Session'
+            };
+            return titles[step] || step;
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString();
+        }
+
+        function formatRelativeTime(dateString) {
+            const diff = Date.now() - new Date(dateString).getTime();
+            const minutes = Math.floor(diff / (1000 * 60));
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            return `${days}d ago`;
+        }
+
+        // Modal Functions
+        function openNewMerchantModal() {
+            document.getElementById('new-merchant-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function openScheduleModal() {
+            populateScheduleModal();
+            document.getElementById('schedule-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function openReminderModal() {
+            populateReminderModal();
+            document.getElementById('reminder-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function openSettingsModal() {
+            document.getElementById('settings-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function openHelpModal() {
+            document.getElementById('help-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // Export Report Function
+        async function exportReport() {
+            try {
+                const reportData = {
+                    metrics: {
+                        activeOnboardings: document.getElementById('active-count').textContent,
+                        completedToday: document.getElementById('completed-today').textContent,
+                        overdueTasks: document.getElementById('overdue-count').textContent,
+                        completionRate: document.getElementById('completion-rate').textContent
+                    },
+                    merchants: merchantsData,
+                    timestamp: new Date().toISOString()
+                };
+
+                const csvContent = generateCSVReport(reportData);
+                downloadCSV(csvContent, `onboarding-report-${new Date().toISOString().split('T')[0]}.csv`);
+                
+                showNotification('Report exported successfully!', 'success');
+            } catch (error) {
+                console.error('Export failed:', error);
+                showNotification('Export failed. Please try again.', 'error');
+            }
+        }
+
+        // Generate CSV Report
+        function generateCSVReport(data) {
+            const headers = ['Merchant Name', 'Email', 'Segment', 'Completion %', 'Delivery Status', 'Installation Status', 'Training Status', 'Last Updated'];
+            const rows = data.merchants.map(merchant => [
+                merchant.merchant.accountName,
+                merchant.merchant.email,
+                merchant.merchant.segment,
+                merchant.completionPercentage + '%',
+                merchant.progress.hardwareDelivery.status,
+                merchant.progress.hardwareInstallation.status,
+                merchant.progress.training.status,
+                formatDate(merchant.updatedAt)
+            ]);
+
+            return [headers, ...rows].map(row => row.join(',')).join('\n');
+        }
+
+        // Download CSV
+        function downloadCSV(content, filename) {
+            const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        // Populate Schedule Modal
+        function populateScheduleModal() {
+            const merchantSelect = document.getElementById('schedule-merchant');
+            merchantSelect.innerHTML = '<option value="">Select Merchant</option>';
+            
+            merchantsData.forEach(merchant => {
+                const option = document.createElement('option');
+                option.value = merchant.id;
+                option.textContent = merchant.merchant.accountName;
+                merchantSelect.appendChild(option);
+            });
+
+            // Set minimum date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('schedule-date').min = today;
+        }
+
+        // Populate Reminder Modal
+        function populateReminderModal() {
+            const merchantList = document.getElementById('merchant-list');
+            merchantList.innerHTML = '';
+            
+            merchantsData.forEach(merchant => {
+                const checkbox = document.createElement('div');
+                checkbox.className = 'flex items-center space-x-2 p-2 hover:bg-gray-50 rounded';
+                checkbox.innerHTML = `
+                    <input type="checkbox" id="merchant-${merchant.id}" name="reminder-merchants" value="${merchant.id}" class="h-4 w-4 text-storehub-primary focus:ring-storehub-primary border-gray-300 rounded">
+                    <label for="merchant-${merchant.id}" class="text-sm text-gray-700 flex-1">${merchant.merchant.accountName}</label>
+                    <span class="text-xs text-gray-500">${merchant.merchant.email}</span>
+                `;
+                merchantList.appendChild(checkbox);
+            });
+        }
+
+        // Form Submission Handlers
+        document.getElementById('new-merchant-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                accountName: document.getElementById('business-name').value,
+                contactPerson: document.getElementById('contact-person').value,
+                email: document.getElementById('merchant-email').value,
+                phone: document.getElementById('merchant-phone').value,
+                segment: document.getElementById('business-segment').value,
+                priority: document.getElementById('priority-level').value,
+                address: document.getElementById('merchant-address').value,
+                specialRequirements: document.getElementById('special-requirements').value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/merchant/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    showNotification('Merchant created successfully!', 'success');
+                    closeModal('new-merchant-modal');
+                    document.getElementById('new-merchant-form').reset();
+                    loadData();
+                } else {
+                    throw new Error('Failed to create merchant');
+                }
+            } catch (error) {
+                console.error('Error creating merchant:', error);
+                showNotification('Failed to create merchant. Please try again.', 'error');
+            }
+        });
+
+        document.getElementById('schedule-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                merchantId: document.getElementById('schedule-merchant').value,
+                serviceType: document.getElementById('service-type').value,
+                date: document.getElementById('schedule-date').value,
+                time: document.getElementById('schedule-time').value,
+                duration: document.getElementById('schedule-duration').value,
+                assignedTo: document.getElementById('assigned-to').value,
+                notes: document.getElementById('schedule-notes').value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/scheduling/schedule`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    showNotification('Appointment scheduled successfully!', 'success');
+                    closeModal('schedule-modal');
+                    document.getElementById('schedule-form').reset();
+                    loadData();
+                } else {
+                    throw new Error('Failed to schedule appointment');
+                }
+            } catch (error) {
+                console.error('Error scheduling appointment:', error);
+                showNotification('Failed to schedule appointment. Please try again.', 'error');
+            }
+        });
+
+        document.getElementById('reminder-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const selectedMerchants = Array.from(document.querySelectorAll('input[name="reminder-merchants"]:checked'))
+                .map(cb => cb.value);
+
+            const formData = {
+                type: document.getElementById('reminder-type').value,
+                method: document.getElementById('send-method').value,
+                merchants: selectedMerchants,
+                message: document.getElementById('reminder-message').value,
+                template: document.getElementById('message-template').value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/notifications/send-reminder`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    showNotification(`Reminder sent to ${selectedMerchants.length} merchants!`, 'success');
+                    closeModal('reminder-modal');
+                    document.getElementById('reminder-form').reset();
+                } else {
+                    throw new Error('Failed to send reminder');
+                }
+            } catch (error) {
+                console.error('Error sending reminder:', error);
+                showNotification('Failed to send reminder. Please try again.', 'error');
+            }
+        });
+
+        // Settings Functions
+        function saveSettings() {
+            const settings = {
+                sla: {
+                    delivery: document.getElementById('delivery-sla').value,
+                    installation: document.getElementById('installation-sla').value,
+                    training: document.getElementById('training-sla').value
+                },
+                notifications: {
+                    email: document.getElementById('email-notifications').checked,
+                    sms: document.getElementById('sms-notifications').checked,
+                    autoReminders: document.getElementById('auto-reminders').checked
+                },
+                team: {
+                    workStart: document.getElementById('work-start').value,
+                    workEnd: document.getElementById('work-end').value,
+                    maxAppointments: document.getElementById('max-appointments').value
+                },
+                data: {
+                    autoArchive: document.getElementById('auto-archive').value,
+                    refreshInterval: document.getElementById('refresh-interval').value
+                }
+            };
+
+            // Save settings to localStorage for demo
+            localStorage.setItem('onboarding-settings', JSON.stringify(settings));
+            showNotification('Settings saved successfully!', 'success');
+            closeModal('settings-modal');
+        }
+
+        // Load settings from localStorage
+        function loadSettings() {
+            const settings = localStorage.getItem('onboarding-settings');
+            if (settings) {
+                const parsed = JSON.parse(settings);
+                
+                // Apply settings to form fields
+                document.getElementById('delivery-sla').value = parsed.sla.delivery || 3;
+                document.getElementById('installation-sla').value = parsed.sla.installation || 7;
+                document.getElementById('training-sla').value = parsed.sla.training || 14;
+                
+                document.getElementById('email-notifications').checked = parsed.notifications.email !== false;
+                document.getElementById('sms-notifications').checked = parsed.notifications.sms !== false;
+                document.getElementById('auto-reminders').checked = parsed.notifications.autoReminders !== false;
+                
+                document.getElementById('work-start').value = parsed.team.workStart || '09:00';
+                document.getElementById('work-end').value = parsed.team.workEnd || '17:00';
+                document.getElementById('max-appointments').value = parsed.team.maxAppointments || 8;
+                
+                document.getElementById('auto-archive').value = parsed.data.autoArchive || '90';
+                document.getElementById('refresh-interval').value = parsed.data.refreshInterval || '120';
+            }
+        }
+
+        // Notification System
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm ${
+                type === 'success' ? 'bg-green-500 text-white' :
+                type === 'error' ? 'bg-red-500 text-white' :
+                type === 'warning' ? 'bg-yellow-500 text-white' :
+                'bg-blue-500 text-white'
+            }`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <span class="mr-2">${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-auto p-1 hover:bg-white hover:bg-opacity-20 rounded">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Message Template Handler
+        document.getElementById('message-template').addEventListener('change', (e) => {
+            const templates = {
+                'appointment-reminder': 'Hi {{name}}, this is a reminder about your upcoming {{service}} appointment scheduled for {{date}} at {{time}}. Please ensure someone is available to receive our team. Contact us if you need to reschedule.',
+                'overdue-task': 'Hi {{name}}, we noticed that your {{service}} is overdue. Please contact us to reschedule at your earliest convenience. We\'re here to help complete your onboarding process.',
+                'welcome': 'Welcome to StoreHub! We\'re excited to help you get started. Your onboarding process will begin shortly and we\'ll keep you updated on each step.',
+                'completion': 'Congratulations {{name}}! Your onboarding process is now complete. Welcome to the StoreHub family! If you have any questions, our support team is here to help.'
+            };
+            
+            const template = templates[e.target.value];
+            if (template) {
+                document.getElementById('reminder-message').value = template;
+            }
+        });
+
+        // Select All Merchants Handler
+        document.getElementById('select-all-merchants').addEventListener('change', (e) => {
+            const checkboxes = document.querySelectorAll('input[name="reminder-merchants"]');
+            checkboxes.forEach(cb => cb.checked = e.target.checked);
+        });
+
+        // Event listeners
+        document.getElementById('refresh-btn').addEventListener('click', loadData);
+        document.getElementById('close-modal').addEventListener('click', closeTaskModal);
+        document.getElementById('task-modal').addEventListener('click', (e) => {
+            if (e.target === taskModal) closeTaskModal();
+        });
+        
+        statusFilter.addEventListener('change', renderTasks);
+        stepFilter.addEventListener('change', renderTasks);
+
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'cancel-task') closeTaskModal();
+            if (e.target.id === 'save-task') {
+                // Here you would save the task changes
+                showNotification('Task updated successfully!', 'success');
+                closeTaskModal();
+                loadData();
+            }
+        });
+
+        // Load data on page load
+        loadData();
+        loadSettings();
+        
+        // Auto-refresh every 2 minutes
+        setInterval(loadData, 120000);
+    </script>
+</body>
+</html>
