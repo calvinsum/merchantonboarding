@@ -36,7 +36,7 @@ import { SharedModule } from './shared/shared.module';
             type: 'postgres',
             url: configService.get<string>('DATABASE_URL'),
             autoLoadEntities: true,
-            synchronize: false, // Never auto-sync in production
+            synchronize: true, // TODO: Set to false after initial deployment // Never auto-sync in production
             logging: configService.get<boolean>('DB_LOGGING', false),
             ssl: {
               rejectUnauthorized: false, // Required for most cloud PostgreSQL services
