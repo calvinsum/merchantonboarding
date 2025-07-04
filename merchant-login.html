@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StoreHub - Merchant Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            color: white;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            transform: translateY(-20px);
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .toast-success { background-color: #28a745; }
+        .toast-error { background-color: #dc3545; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div id="toast-container"></div>
+    
+    <div class="max-w-md w-full bg-white rounded-lg shadow-md p-8">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <span class="text-white font-bold text-xl">SH</span>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-900">StoreHub Onboarding</h1>
+            <p class="text-gray-600 mt-2">Welcome to your onboarding portal</p>
+        </div>
+
+        <div id="loading" class="text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p class="mt-4 text-gray-600">Verifying your access...</p>
+        </div>
+
+        <div id="error" class="hidden text-center">
+            <div class="text-red-500 text-6xl mb-4">⚠️</div>
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
+            <p class="text-gray-600 mb-4">Your login link is invalid or has expired.</p>
+            <button onclick="window.close()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                Close
+            </button>
+        </div>
+
+        <div id="success" class="hidden text-center">
+            <div class="text-green-500 text-6xl mb-4">✅</div>
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">Welcome!</h2>
+            <p class="text-gray-600 mb-4">Your access has been verified successfully.</p>
+            <div id="merchant-info" class="bg-gray-50 p-4 rounded-lg mb-4 text-left">
+                <h3 class="font-semibold mb-2">Your Information:</h3>
+                <div id="merchant-details"></div>
+            </div>
+            <p class="text-sm text-gray-500">Your onboarding journey will begin shortly.</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://merchantonboarding.onrender.com/api/v1';
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type === 'success' ? 'toast-success' : 'toast-error'}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    container.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
+
+        async function verifyToken(token) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/verify-token`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showSuccess(data);
+                } else {
+                    showError();
+                }
+            } catch (error) {
+                console.error('Verification error:', error);
+                showError();
+            }
+        }
+
+        function showSuccess(data) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('success').style.display = 'block';
+            
+            // Display merchant information if available
+            if (data.merchantId) {
+                document.getElementById('merchant-details').innerHTML = `
+                    <p><strong>Merchant ID:</strong> ${data.merchantId}</p>
+                    <p><strong>Status:</strong> Verified</p>
+                    <p><strong>Access:</strong> Granted</p>
+                `;
+            }
+            
+            showToast('Access verified successfully!');
+        }
+
+        function showError() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            showToast('Invalid or expired token', 'error');
+        }
+
+        // Get token from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        if (token) {
+            verifyToken(token);
+        } else {
+            showError();
+        }
+    </script>
+</body>
+</html>
