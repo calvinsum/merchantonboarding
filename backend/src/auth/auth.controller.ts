@@ -7,18 +7,25 @@ import {
   UseGuards,
   Request,
   Get,
+  Res,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Response } from 'express';
+import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { LoginDto, RefreshTokenDto, ChangePasswordDto, ResetPasswordDto, GenerateTokenDto } from './dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private jwtService: JwtService,
+  ) {}
 
   @Public()
   @Post('login')
@@ -97,5 +104,37 @@ export class AuthController {
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     await this.authService.resetPassword(resetPasswordDto.email);
     return { message: 'Password reset successfully. Check your email for new password.' };
+  }
+
+  // Google OAuth endpoints
+  @Public()
+  @Get('google')
+  @UseGuards(GoogleAuthGuard)
+  @ApiOperation({ summary: 'Google OAuth login' })
+  @ApiResponse({ status: 302, description: 'Redirect to Google OAuth' })
+  async googleAuth() {
+    // This will redirect to Google
+  }
+
+  @Public()
+  @Get('google/callback')
+  @UseGuards(GoogleAuthGuard)
+  @ApiOperation({ summary: 'Google OAuth callback' })
+  @ApiResponse({ status: 302, description: 'Redirect to frontend with token' })
+  async googleAuthRedirect(@Request() req, @Res() res: Response) {
+    // Generate JWT token for the authenticated user
+    const payload = {
+      email: req.user.email,
+      sub: req.user.email,
+      role: req.user.role,
+      firstName: req.user.firstName,
+      lastName: req.user.lastName,
+    };
+
+    const token = this.jwtService.sign(payload, { expiresIn: '24h' });
+
+    // Redirect to frontend with token
+    const frontendUrl = process.env.FRONTEND_URL || 'https://storehub.com';
+    res.redirect(`${frontendUrl}/admin/dashboard?token=${token}`);
   }
 }

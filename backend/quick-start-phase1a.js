@@ -154,9 +154,9 @@ app.post('/api/v1/admin/prefill', (req, res) => {
 
   onboardingRecords.set(onboardingId, newOnboardingRecord);
 
-  // Generate login link - Updated for file-based testing
-  const baseUrl = process.env.FRONTEND_URL || 'file:///Users/calvinsum/storehub-onboarding';
-  const loginLink = `${baseUrl}/merchant-login.html?token=${authToken}`;
+  // Generate login link - Updated for production URLs
+  const baseUrl = process.env.FRONTEND_URL || 'https://storehub.com';
+  const loginLink = `${baseUrl}/merchant/login?token=${authToken}`;
 
   res.json({
     success: true,
@@ -195,8 +195,8 @@ app.get('/api/v1/admin/prefill/link/:merchantId', (req, res) => {
   merchants.set(merchantId, merchant);
 
   const onboardingRecord = Array.from(onboardingRecords.values()).find(r => r.merchantId === merchantId);
-  const baseUrl = process.env.FRONTEND_URL || 'file:///Users/calvinsum/storehub-onboarding';
-  const loginLink = `${baseUrl}/merchant-login.html?token=${authToken}`;
+  const baseUrl = process.env.FRONTEND_URL || 'https://storehub.com';
+  const loginLink = `${baseUrl}/merchant/login?token=${authToken}`;
 
   res.json({
     success: true,

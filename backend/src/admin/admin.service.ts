@@ -142,9 +142,9 @@ export class AdminService {
       where: { merchantId },
     });
 
-    // Generate login link - Updated for file-based testing
-    const baseUrl = process.env.FRONTEND_URL || 'file:///Users/calvinsum/storehub-onboarding';
-    const loginLink = `${baseUrl}/merchant-login.html?token=${token}`;
+    // Generate login link - Updated for production URLs
+    const baseUrl = process.env.FRONTEND_URL || 'https://storehub.com';
+    const loginLink = `${baseUrl}/merchant/login?token=${token}`;
 
     return {
       loginLink,
