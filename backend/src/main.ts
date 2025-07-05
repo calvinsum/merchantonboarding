@@ -63,8 +63,8 @@ async function bootstrap() {
     ],
   });
 
-  // Swagger documentation
-  if (configService.get<string>('NODE_ENV') === 'development') {
+  // Swagger documentation - Enable in production for Phase 1A
+  if (configService.get<string>('NODE_ENV') !== 'test') {
     const config = new DocumentBuilder()
       .setTitle('StoreHub Onboarding API')
       .setDescription('StoreHub Onboarding Automation System API Documentation')
