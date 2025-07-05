@@ -14,7 +14,21 @@ async function bootstrap() {
     const configService = app.get(config_1.ConfigService);
     const port = configService.get('PORT', 3001);
     const apiPrefix = configService.get('API_PREFIX', 'api/v1');
-    app.use((0, helmet_1.default)());
+    app.use((0, helmet_1.default)({
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+                scriptSrc: ["'self'", "'unsafe-inline'"],
+                imgSrc: ["'self'", "data:", "https:"],
+                fontSrc: ["'self'", "https:", "data:"],
+                connectSrc: ["'self'", "https:"],
+                frameSrc: ["'self'"],
+                objectSrc: ["'none'"],
+                upgradeInsecureRequests: [],
+            },
+        },
+    }));
     app.use(compression());
     app.useGlobalPipes(new common_1.ValidationPipe({
         transform: true,
@@ -34,11 +48,15 @@ async function bootstrap() {
         exclude: [
             '/',
             '/admin',
+            '/admin/prefill',
+            '/admin/prefill/*',
+            '/admin/onboarding',
+            '/admin/onboarding/*',
             '/auth/google',
             '/auth/google/callback'
         ],
     });
-    if (configService.get('NODE_ENV') === 'development') {
+    if (configService.get('NODE_ENV') !== 'test') {
         const config = new swagger_1.DocumentBuilder()
             .setTitle('StoreHub Onboarding API')
             .setDescription('StoreHub Onboarding Automation System API Documentation')

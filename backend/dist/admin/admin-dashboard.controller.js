@@ -86,7 +86,7 @@ let AdminDashboardController = class AdminDashboardController {
                           <p>Merchant Onboarding Manager</p>
                       </div>
                       <div class="auth-section">
-                          <a href="/auth/google" class="btn btn-primary">Sign in with Google</a>
+                          <a href="/auth/google" class="btn btn-primary" target="_self">Sign in with Google</a>
                           <a href="/api/docs" class="btn btn-secondary">API Docs</a>
                       </div>
                   </div>
@@ -147,7 +147,7 @@ let AdminDashboardController = class AdminDashboardController {
                               Google OAuth integration for StoreHub staff (@storehub.com emails) with JWT tokens
                               for secure merchant access.
                           </div>
-                          <a href="/auth/google" class="btn btn-primary">Sign In</a>
+                          <a href="/auth/google" class="btn btn-primary" target="_self">Sign In</a>
                       </div>
 
                       <div class="dashboard-card">
@@ -212,6 +212,57 @@ let AdminDashboardController = class AdminDashboardController {
 
               // Load stats on page load
               window.addEventListener('load', loadStats);
+
+              // Handle Google OAuth redirect
+              function handleAuthRedirect() {
+                  const urlParams = new URLSearchParams(window.location.search);
+                  const token = urlParams.get('token');
+                  const auth = urlParams.get('auth');
+                  
+                  if (token && auth === 'success') {
+                      // Store token in localStorage
+                      localStorage.setItem('adminToken', token);
+                      
+                      // Show success message
+                      const successDiv = document.createElement('div');
+                      successDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000; background: #10b981; color: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-weight: 600;';
+                      successDiv.textContent = '✅ Successfully signed in with Google!';
+                      document.body.appendChild(successDiv);
+                      
+                      // Remove success message after 5 seconds
+                      setTimeout(() => {
+                          successDiv.remove();
+                      }, 5000);
+                      
+                      // Clean up URL
+                      window.history.replaceState({}, document.title, window.location.pathname);
+                      
+                      // Update UI to show signed in state
+                      const signInBtn = document.querySelector('a[href="/auth/google"]');
+                      if (signInBtn) {
+                          signInBtn.textContent = '✅ Signed In';
+                          signInBtn.style.background = '#10b981';
+                          signInBtn.href = '#';
+                      }
+                  }
+              }
+
+              // Check for auth redirect on page load
+              window.addEventListener('load', handleAuthRedirect);
+
+              // Handle Google OAuth button clicks
+              function handleGoogleLogin() {
+                  const googleButtons = document.querySelectorAll('a[href="/auth/google"]');
+                  googleButtons.forEach(button => {
+                      button.addEventListener('click', function(e) {
+                          console.log('Google OAuth button clicked');
+                          // Let the default behavior proceed (navigate to /auth/google)
+                      });
+                  });
+              }
+
+              // Initialize Google OAuth button handlers
+              window.addEventListener('load', handleGoogleLogin);
           </script>
       </body>
       </html>

@@ -25,6 +25,19 @@ let PreFillController = class PreFillController {
     constructor(adminService) {
         this.adminService = adminService;
     }
+    async getPreFillInfo() {
+        return {
+            service: 'Pre-Fill & Merchant Links',
+            version: '1.0',
+            description: 'Create merchants from pre-fill forms and generate login links',
+            endpoints: {
+                createMerchant: 'POST /admin/prefill',
+                generateLink: 'GET /admin/prefill/link/:merchantId',
+                verifyToken: 'GET /admin/prefill/verify/:token'
+            },
+            status: 'active'
+        };
+    }
     async createMerchantFromPreFill(preFillData) {
         return this.adminService.createMerchantFromPreFill(preFillData);
     }
@@ -36,6 +49,17 @@ let PreFillController = class PreFillController {
     }
 };
 exports.PreFillController = PreFillController;
+__decorate([
+    (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Get pre-fill service information' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Pre-fill service information retrieved successfully'
+    }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], PreFillController.prototype, "getPreFillInfo", null);
 __decorate([
     (0, common_1.Post)(),
     (0, swagger_1.ApiOperation)({ summary: 'Create merchant from pre-fill form and generate login link' }),
