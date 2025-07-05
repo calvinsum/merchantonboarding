@@ -58,6 +58,10 @@ async function bootstrap() {
     exclude: [
       '/',
       '/admin',
+      '/admin/prefill',
+      '/admin/prefill/*',
+      '/admin/onboarding',
+      '/admin/onboarding/*',
       '/auth/google',
       '/auth/google/callback'
     ],
