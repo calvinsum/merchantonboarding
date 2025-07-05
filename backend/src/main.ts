@@ -39,8 +39,15 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   });
 
-  // API prefix
-  app.setGlobalPrefix(apiPrefix);
+  // API prefix - exclude certain routes
+  app.setGlobalPrefix(apiPrefix, {
+    exclude: [
+      '/',
+      '/admin',
+      '/auth/google',
+      '/auth/google/callback'
+    ],
+  });
 
   // Swagger documentation
   if (configService.get<string>('NODE_ENV') === 'development') {
