@@ -75,7 +75,7 @@ export class AdminDashboardController {
                           <p>Merchant Onboarding Manager</p>
                       </div>
                       <div class="auth-section">
-                          <a href="/auth/google" class="btn btn-primary">Sign in with Google</a>
+                          <a href="/auth/google" class="btn btn-primary" target="_self">Sign in with Google</a>
                           <a href="/api/docs" class="btn btn-secondary">API Docs</a>
                       </div>
                   </div>
@@ -136,7 +136,7 @@ export class AdminDashboardController {
                               Google OAuth integration for StoreHub staff (@storehub.com emails) with JWT tokens
                               for secure merchant access.
                           </div>
-                          <a href="/auth/google" class="btn btn-primary">Sign In</a>
+                          <a href="/auth/google" class="btn btn-primary" target="_self">Sign In</a>
                       </div>
 
                       <div class="dashboard-card">
@@ -238,6 +238,20 @@ export class AdminDashboardController {
 
               // Check for auth redirect on page load
               window.addEventListener('load', handleAuthRedirect);
+
+              // Handle Google OAuth button clicks
+              function handleGoogleLogin() {
+                  const googleButtons = document.querySelectorAll('a[href="/auth/google"]');
+                  googleButtons.forEach(button => {
+                      button.addEventListener('click', function(e) {
+                          console.log('Google OAuth button clicked');
+                          // Let the default behavior proceed (navigate to /auth/google)
+                      });
+                  });
+              }
+
+              // Initialize Google OAuth button handlers
+              window.addEventListener('load', handleGoogleLogin);
           </script>
       </body>
       </html>
