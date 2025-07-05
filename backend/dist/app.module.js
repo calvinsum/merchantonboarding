@@ -20,6 +20,8 @@ const admin_module_1 = require("./admin/admin.module");
 const reports_module_1 = require("./reports/reports.module");
 const database_module_1 = require("./database/database.module");
 const shared_module_1 = require("./shared/shared.module");
+const merchant_login_controller_1 = require("./merchant/merchant-login.controller");
+const admin_dashboard_controller_1 = require("./admin/admin-dashboard.controller");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -77,7 +79,7 @@ exports.AppModule = AppModule = __decorate([
             admin_module_1.AdminModule,
             reports_module_1.ReportsModule,
         ],
-        controllers: [],
+        controllers: [admin_dashboard_controller_1.AdminDashboardController, merchant_login_controller_1.MerchantLoginController],
         providers: [],
     })
 ], AppModule);

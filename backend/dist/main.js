@@ -30,7 +30,14 @@ async function bootstrap() {
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     });
-    app.setGlobalPrefix(apiPrefix);
+    app.setGlobalPrefix(apiPrefix, {
+        exclude: [
+            '/',
+            '/admin',
+            '/auth/google',
+            '/auth/google/callback'
+        ],
+    });
     if (configService.get('NODE_ENV') === 'development') {
         const config = new swagger_1.DocumentBuilder()
             .setTitle('StoreHub Onboarding API')

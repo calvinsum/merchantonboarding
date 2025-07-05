@@ -1,11 +1,22 @@
-import { Controller, Get, Res } from '@nestjs/common';
-import { Response } from 'express';
-
-@Controller()
-export class AdminDashboardController {
-  @Get()
-  async serveAdminDashboard(@Res() res: Response) {
-    res.send(`
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AdminDashboardController = void 0;
+const common_1 = require("@nestjs/common");
+let AdminDashboardController = class AdminDashboardController {
+    async serveAdminDashboard(res) {
+        res.send(`
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -201,51 +212,31 @@ export class AdminDashboardController {
 
               // Load stats on page load
               window.addEventListener('load', loadStats);
-
-              // Handle Google OAuth redirect
-              function handleAuthRedirect() {
-                  const urlParams = new URLSearchParams(window.location.search);
-                  const token = urlParams.get('token');
-                  const auth = urlParams.get('auth');
-                  
-                  if (token && auth === 'success') {
-                      // Store token in localStorage
-                      localStorage.setItem('adminToken', token);
-                      
-                      // Show success message
-                      const successDiv = document.createElement('div');
-                      successDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000; background: #10b981; color: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-weight: 600;';
-                      successDiv.textContent = '✅ Successfully signed in with Google!';
-                      document.body.appendChild(successDiv);
-                      
-                      // Remove success message after 5 seconds
-                      setTimeout(() => {
-                          successDiv.remove();
-                      }, 5000);
-                      
-                      // Clean up URL
-                      window.history.replaceState({}, document.title, window.location.pathname);
-                      
-                      // Update UI to show signed in state
-                      const signInBtn = document.querySelector('a[href="/auth/google"]');
-                      if (signInBtn) {
-                          signInBtn.textContent = '✅ Signed In';
-                          signInBtn.style.background = '#10b981';
-                          signInBtn.href = '#';
-                      }
-                  }
-              }
-
-              // Check for auth redirect on page load
-              window.addEventListener('load', handleAuthRedirect);
           </script>
       </body>
       </html>
     `);
-  }
-
-  @Get('admin')
-  async redirectToRoot(@Res() res: Response) {
-    res.redirect('/');
-  }
-} 
+    }
+    async redirectToRoot(res) {
+        res.redirect('/');
+    }
+};
+exports.AdminDashboardController = AdminDashboardController;
+__decorate([
+    (0, common_1.Get)(),
+    __param(0, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AdminDashboardController.prototype, "serveAdminDashboard", null);
+__decorate([
+    (0, common_1.Get)('admin'),
+    __param(0, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AdminDashboardController.prototype, "redirectToRoot", null);
+exports.AdminDashboardController = AdminDashboardController = __decorate([
+    (0, common_1.Controller)()
+], AdminDashboardController);
+//# sourceMappingURL=admin-dashboard.controller.js.map

@@ -140,8 +140,8 @@ export class AuthController {
 
     const token = this.jwtService.sign(payload, { expiresIn: '24h' });
 
-    // Redirect to frontend with token
-    const frontendUrl = process.env.FRONTEND_URL || 'https://storehub.com';
-    res.redirect(`${frontendUrl}/admin/dashboard?token=${token}`);
+    // Redirect to our onboarding platform admin dashboard with token
+    const onboardingUrl = process.env.ONBOARDING_URL || 'https://merchantonboarding.onrender.com';
+    res.redirect(`${onboardingUrl}/?token=${token}&auth=success`);
   }
 }
