@@ -291,7 +291,7 @@ app.post('/api/v1/admin/prefill', (req, res) => {
 
   // Generate login link - Updated for production URLs
   const baseUrl = process.env.FRONTEND_URL || 'https://merchantonboarding.onrender.com';
-  const loginLink = `${baseUrl}/merchant/login?token=${authToken}`;
+  const loginLink = `${baseUrl}/api/v1/merchant/login?token=${authToken}`;
 
   res.json({
     success: true,
@@ -331,7 +331,7 @@ app.get('/api/v1/admin/prefill/link/:merchantId', (req, res) => {
 
   const onboardingRecord = Array.from(onboardingRecords.values()).find(r => r.merchantId === merchantId);
   const baseUrl = process.env.FRONTEND_URL || 'https://merchantonboarding.onrender.com';
-  const loginLink = `${baseUrl}/merchant/login?token=${authToken}`;
+  const loginLink = `${baseUrl}/api/v1/merchant/login?token=${authToken}`;
 
   res.json({
     success: true,
