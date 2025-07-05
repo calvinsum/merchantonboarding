@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = 3001;
@@ -8,6 +10,139 @@ const PORT = 3001;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Serve mobile login page
+app.get('/merchant/login', (req, res) => {
+  const loginPagePath = path.join(__dirname, '..', 'merchant-login-mobile.html');
+  
+  // Check if file exists
+  if (fs.existsSync(loginPagePath)) {
+    res.sendFile(loginPagePath);
+  } else {
+    // Fallback: serve inline HTML if file doesn't exist
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>StoreHub - Merchant Login</title>
+          <style>
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body { 
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+              }
+              .container { 
+                  background: white; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+                  width: 100%; max-width: 400px; padding: 40px 30px; text-align: center;
+              }
+              .logo h1 { color: #333; font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+              .logo p { color: #666; font-size: 14px; margin-bottom: 30px; }
+              .welcome-text h2 { color: #333; font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+              .welcome-text p { color: #666; font-size: 16px; line-height: 1.5; margin-bottom: 30px; }
+              .form-group { margin-bottom: 20px; text-align: left; }
+              .form-group label { display: block; color: #333; font-weight: 500; margin-bottom: 8px; font-size: 14px; }
+              .form-group input { 
+                  width: 100%; padding: 16px; border: 2px solid #e1e5e9; border-radius: 12px; 
+                  font-size: 16px; transition: border-color 0.3s ease; background: #f8f9fa;
+              }
+              .form-group input:focus { outline: none; border-color: #667eea; background: white; }
+              .login-btn { 
+                  width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600;
+                  cursor: pointer; transition: transform 0.2s ease; margin-bottom: 20px;
+              }
+              .login-btn:hover { transform: translateY(-2px); }
+              .error-message { background: #fee; color: #c53030; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; display: none; }
+              .success-message { background: #f0fff4; color: #38a169; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; display: none; }
+              .help-text { color: #666; font-size: 14px; line-height: 1.5; margin-top: 20px; }
+              .help-text a { color: #667eea; text-decoration: none; }
+              @media (max-width: 480px) {
+                  .container { padding: 30px 20px; margin: 10px; }
+                  .logo h1 { font-size: 24px; }
+                  .welcome-text h2 { font-size: 20px; }
+              }
+          </style>
+      </head>
+      <body>
+          <div class="container">
+              <div class="logo">
+                  <h1>StoreHub</h1>
+                  <p>Merchant Onboarding</p>
+              </div>
+              <div class="welcome-text">
+                  <h2>Welcome Back!</h2>
+                  <p>Access your onboarding dashboard to continue your setup process.</p>
+              </div>
+              <div class="error-message" id="errorMessage"></div>
+              <div class="success-message" id="successMessage"></div>
+              <form class="login-form" id="loginForm">
+                  <div class="form-group">
+                      <label for="token">Access Token</label>
+                      <input type="text" id="token" name="token" placeholder="Enter your access token" required>
+                  </div>
+                  <button type="submit" class="login-btn" id="loginBtn">Continue to Dashboard</button>
+              </form>
+              <div class="help-text">
+                  <p>Need help? Contact our support team at <a href="mailto:support@storehub.com">support@storehub.com</a></p>
+              </div>
+          </div>
+          <script>
+              const urlParams = new URLSearchParams(window.location.search);
+              const tokenFromUrl = urlParams.get('token');
+              if (tokenFromUrl) {
+                  document.getElementById('token').value = tokenFromUrl;
+                  setTimeout(() => document.getElementById('loginForm').dispatchEvent(new Event('submit')), 1000);
+              }
+              document.getElementById('loginForm').addEventListener('submit', async function(e) {
+                  e.preventDefault();
+                  const token = document.getElementById('token').value.trim();
+                  const loginBtn = document.getElementById('loginBtn');
+                  const errorMessage = document.getElementById('errorMessage');
+                  const successMessage = document.getElementById('successMessage');
+                  if (!token) {
+                      errorMessage.textContent = 'Please enter your access token';
+                      errorMessage.style.display = 'block';
+                      return;
+                  }
+                  loginBtn.disabled = true;
+                  loginBtn.textContent = 'Verifying...';
+                  errorMessage.style.display = 'none';
+                  successMessage.style.display = 'none';
+                  try {
+                      const response = await fetch('/api/v1/merchant/auth', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ token })
+                      });
+                      const data = await response.json();
+                      if (data.success) {
+                          successMessage.textContent = 'Login successful! Redirecting to dashboard...';
+                          successMessage.style.display = 'block';
+                          localStorage.setItem('merchantToken', token);
+                          localStorage.setItem('merchantData', JSON.stringify(data.data));
+                          setTimeout(() => window.location.href = '/merchant/dashboard', 1500);
+                      } else {
+                          errorMessage.textContent = data.message || 'Invalid access token. Please check and try again.';
+                          errorMessage.style.display = 'block';
+                      }
+                  } catch (error) {
+                      console.error('Login error:', error);
+                      errorMessage.textContent = 'Connection error. Please check your internet connection and try again.';
+                      errorMessage.style.display = 'block';
+                  } finally {
+                      loginBtn.disabled = false;
+                      loginBtn.textContent = 'Continue to Dashboard';
+                  }
+              });
+          </script>
+      </body>
+      </html>
+    `);
+  }
+});
 
 // In-memory storage for demo
 let merchants = new Map();
@@ -155,7 +290,7 @@ app.post('/api/v1/admin/prefill', (req, res) => {
   onboardingRecords.set(onboardingId, newOnboardingRecord);
 
   // Generate login link - Updated for production URLs
-  const baseUrl = process.env.FRONTEND_URL || 'https://storehub.com';
+  const baseUrl = process.env.FRONTEND_URL || 'https://merchantonboarding.onrender.com';
   const loginLink = `${baseUrl}/merchant/login?token=${authToken}`;
 
   res.json({
@@ -195,7 +330,7 @@ app.get('/api/v1/admin/prefill/link/:merchantId', (req, res) => {
   merchants.set(merchantId, merchant);
 
   const onboardingRecord = Array.from(onboardingRecords.values()).find(r => r.merchantId === merchantId);
-  const baseUrl = process.env.FRONTEND_URL || 'https://storehub.com';
+  const baseUrl = process.env.FRONTEND_URL || 'https://merchantonboarding.onrender.com';
   const loginLink = `${baseUrl}/merchant/login?token=${authToken}`;
 
   res.json({

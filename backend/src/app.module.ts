@@ -16,6 +16,9 @@ import { DatabaseModule } from './database/database.module';
 // Shared modules
 import { SharedModule } from './shared/shared.module';
 
+// Controllers
+import { MerchantLoginController } from './merchant/merchant-login.controller';
+
 @Module({
   imports: [
     // Configuration
@@ -80,7 +83,7 @@ import { SharedModule } from './shared/shared.module';
     AdminModule,
     ReportsModule,
   ],
-  controllers: [],
+  controllers: [MerchantLoginController],
   providers: [],
 })
 export class AppModule {}

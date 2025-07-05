@@ -143,7 +143,7 @@ export class AdminService {
     });
 
     // Generate login link - Updated for production URLs
-    const baseUrl = process.env.FRONTEND_URL || 'https://storehub.com';
+    const baseUrl = process.env.FRONTEND_URL || 'https://merchantonboarding.onrender.com';
     const loginLink = `${baseUrl}/merchant/login?token=${token}`;
 
     return {
