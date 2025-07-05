@@ -119,8 +119,8 @@ let AdminService = class AdminService {
         const onboardingRecord = await this.onboardingRepository.findOne({
             where: { merchantId },
         });
-        const baseUrl = process.env.FRONTEND_URL || 'file:///Users/calvinsum/storehub-onboarding';
-        const loginLink = `${baseUrl}/merchant-login.html?token=${token}`;
+        const baseUrl = process.env.FRONTEND_URL || 'https://storehub.com';
+        const loginLink = `${baseUrl}/merchant/login?token=${token}`;
         return {
             loginLink,
             token,

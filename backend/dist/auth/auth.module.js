@@ -11,10 +11,13 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const typeorm_1 = require("@nestjs/typeorm");
 const passport_1 = require("@nestjs/passport");
+const jwt_1 = require("@nestjs/jwt");
 const auth_controller_1 = require("./auth.controller");
 const auth_service_1 = require("./auth.service");
 const jwt_strategy_1 = require("./strategies/jwt.strategy");
+const google_strategy_1 = require("./strategies/google.strategy");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
+const google_auth_guard_1 = require("./guards/google-auth.guard");
 const roles_guard_1 = require("./guards/roles.guard");
 const user_entity_1 = require("../database/entities/user.entity");
 const merchant_entity_1 = require("../database/entities/merchant.entity");
@@ -27,12 +30,21 @@ exports.AuthModule = AuthModule = __decorate([
         imports: [
             typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, merchant_entity_1.Merchant]),
             passport_1.PassportModule,
+            jwt_1.JwtModule.registerAsync({
+                inject: [config_1.ConfigService],
+                useFactory: (configService) => ({
+                    secret: configService.get('JWT_SECRET'),
+                    signOptions: { expiresIn: '24h' },
+                }),
+            }),
             shared_module_1.SharedModule,
         ],
         controllers: [auth_controller_1.AuthController],
         providers: [
             auth_service_1.AuthService,
+            google_strategy_1.GoogleStrategy,
             jwt_auth_guard_1.JwtAuthGuard,
+            google_auth_guard_1.GoogleAuthGuard,
             roles_guard_1.RolesGuard,
             {
                 provide: jwt_strategy_1.JwtStrategy,

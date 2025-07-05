@@ -15,14 +15,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
+const jwt_1 = require("@nestjs/jwt");
 const auth_service_1 = require("./auth.service");
 const public_decorator_1 = require("./decorators/public.decorator");
 const current_user_decorator_1 = require("./decorators/current-user.decorator");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
+const google_auth_guard_1 = require("./guards/google-auth.guard");
 const dto_1 = require("./dto");
 let AuthController = class AuthController {
-    constructor(authService) {
+    constructor(authService, jwtService) {
         this.authService = authService;
+        this.jwtService = jwtService;
     }
     async login(loginDto) {
         return this.authService.adminLogin(loginDto.email, loginDto.password);
@@ -46,6 +49,26 @@ let AuthController = class AuthController {
     async resetPassword(resetPasswordDto) {
         await this.authService.resetPassword(resetPasswordDto.email);
         return { message: 'Password reset successfully. Check your email for new password.' };
+    }
+    async googleAuth(res) {
+        if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+            return res.status(503).json({
+                error: 'Google OAuth not configured',
+                message: 'Google OAuth credentials are not set up. Please contact the administrator.',
+            });
+        }
+    }
+    async googleAuthRedirect(req, res) {
+        const payload = {
+            email: req.user.email,
+            sub: req.user.email,
+            role: req.user.role,
+            firstName: req.user.firstName,
+            lastName: req.user.lastName,
+        };
+        const token = this.jwtService.sign(payload, { expiresIn: '24h' });
+        const frontendUrl = process.env.FRONTEND_URL || 'https://storehub.com';
+        res.redirect(`${frontendUrl}/admin/dashboard?token=${token}`);
     }
 };
 exports.AuthController = AuthController;
@@ -134,9 +157,33 @@ __decorate([
     __metadata("design:paramtypes", [dto_1.ResetPasswordDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "resetPassword", null);
+__decorate([
+    (0, public_decorator_1.Public)(),
+    (0, common_1.Get)('google'),
+    (0, common_1.UseGuards)(google_auth_guard_1.GoogleAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Google OAuth login' }),
+    (0, swagger_1.ApiResponse)({ status: 302, description: 'Redirect to Google OAuth' }),
+    __param(0, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "googleAuth", null);
+__decorate([
+    (0, public_decorator_1.Public)(),
+    (0, common_1.Get)('google/callback'),
+    (0, common_1.UseGuards)(google_auth_guard_1.GoogleAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Google OAuth callback' }),
+    (0, swagger_1.ApiResponse)({ status: 302, description: 'Redirect to frontend with token' }),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "googleAuthRedirect", null);
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('Authentication'),
     (0, common_1.Controller)('auth'),
-    __metadata("design:paramtypes", [auth_service_1.AuthService])
+    __metadata("design:paramtypes", [auth_service_1.AuthService,
+        jwt_1.JwtService])
 ], AuthController);
 //# sourceMappingURL=auth.controller.js.map

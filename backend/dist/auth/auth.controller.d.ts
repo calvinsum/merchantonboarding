@@ -1,8 +1,11 @@
+import { Response } from 'express';
+import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { LoginDto, RefreshTokenDto, ChangePasswordDto, ResetPasswordDto, GenerateTokenDto } from './dto';
 export declare class AuthController {
     private authService;
-    constructor(authService: AuthService);
+    private jwtService;
+    constructor(authService: AuthService, jwtService: JwtService);
     login(loginDto: LoginDto): Promise<{
         token: string;
         refreshToken: string;
@@ -26,4 +29,6 @@ export declare class AuthController {
     resetPassword(resetPasswordDto: ResetPasswordDto): Promise<{
         message: string;
     }>;
+    googleAuth(res: Response): Promise<Response<any, Record<string, any>>>;
+    googleAuthRedirect(req: any, res: Response): Promise<void>;
 }

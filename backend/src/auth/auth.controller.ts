@@ -112,7 +112,14 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   @ApiOperation({ summary: 'Google OAuth login' })
   @ApiResponse({ status: 302, description: 'Redirect to Google OAuth' })
-  async googleAuth() {
+  async googleAuth(@Res() res: Response) {
+    // Check if Google OAuth is configured
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+      return res.status(503).json({
+        error: 'Google OAuth not configured',
+        message: 'Google OAuth credentials are not set up. Please contact the administrator.',
+      });
+    }
     // This will redirect to Google
   }
 

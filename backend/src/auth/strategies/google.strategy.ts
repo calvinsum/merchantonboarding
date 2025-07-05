@@ -5,9 +5,24 @@ import { Strategy, VerifyCallback } from 'passport-google-oauth20';
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor() {
+    const clientID = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    
+    if (!clientID || !clientSecret) {
+      console.warn('Google OAuth credentials not found. Google authentication will be disabled.');
+      // Provide dummy values to prevent strategy initialization errors
+      super({
+        clientID: 'dummy',
+        clientSecret: 'dummy',
+        callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3001/auth/google/callback',
+        scope: ['email', 'profile'],
+      });
+      return;
+    }
+
     super({
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientID,
+      clientSecret,
       callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3001/auth/google/callback',
       scope: ['email', 'profile'],
     });
